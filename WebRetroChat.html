@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Веб-чат</title>
+
+<!-- ============================================================
+     ВЕБ-ЧАТ НА FIREBASE REALTIME DATABASE
+     Совместим со старыми браузерами (IE6+, Firefox 1.0+, Netscape)
+
+     ИНСТРУКЦИЯ ПО УСТАНОВКЕ:
+     1. Замените значение переменной databaseURL в коде ниже
+        на URL вашей Firebase Realtime Database
+        (вида https://ваш-проект.firebaseio.com).
+     2. В настройках Firebase установите правила базы данных:
+        { "rules": { ".read": true, ".write": true } }
+        (Внимание: эти правила открывают доступ всем.
+         Для production настройте аутентификацию.)
+     3. Загрузите файл на GitHub Pages или любой хостинг.
+
+     Особенности:
+     - Пароль входа: 228 (можно изменить в переменной PASSWORD)
+     - Имя пользователя сохраняется в localStorage
+     - Отправка текста и изображений (base64 Data URL)
+     - Опрос сообщений каждые 2 секунды (XMLHttpRequest)
+     - Настройка цвета фона, очистка чата, смайлы
+
+     НОВОЕ В ЭТОЙ ВЕРСИИ:
+     - Звуковые уведомления при получении новых сообщений
+     - Индикатор «Печатает...» (узел /typing в Firebase)
+     - Пагинация: загрузка по 20 сообщений + кнопка «Загрузить ещё»
+     - Улучшенный формат даты (сегодня / вчера / полная дата)
+     - Автоматическая подсветка гиперссылок в тексте сообщений
+     - Улучшенная адаптивная вёрстка для мобильных устройств
+     ============================================================ -->
+
+<style>
+/* ============================================================
+   СТИЛИ (совместимы с IE6+)
+   Намеренно избегаем: border-radius, box-shadow, flexbox,
+   CSS-градиентов, transiciones — они не работают в IE6.
+   Вместо flexbox используем таблицы и float.
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    background-color: #e8e8e8;
+    color: #333333;
+    line-height: 1.45;
+}
+
+/* --- Экраны (контейнеры) --- */
+.screen {
+    width: 100%;
+}
+
+#authScreen, #nameScreen {
+    padding-top: 60px;
+    text-align: center;
+}
+
+/* --- Центральная форма (пароль / имя) --- */
+.form-box {
+    width: 300px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border: 1px solid #999999;
+    padding: 24px;
+    text-align: left;
+}
+
+.form-box h2 {
+    margin-bottom: 16px;
+    color: #2c3e50;
+    font-size: 20px;
+    text-align: center;
+}
+
+.form-box p.hint {
+    font-size: 12px;
+    color: #888888;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.form-box input[type="text"],
+.form-box input[type="password"] {
+    width: 95%;
+    padding: 8px;
+    border: 1px solid #cccccc;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.form-box button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 12px;
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border: 1px solid #2980b9;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.form-box button:hover {
+    background-color: #2980b9;
+}
+
+.error-msg {
+    color: #c0392b;
+    font-size: 12px;
+    margin-top: 8px;
+    text-align: center;
+    min-height: 14px;
+}
+
+/* --- Шапка чата --- */
+#header {
+    background-color: #2c3e50;
+    color: #ffffff;
+    padding: 8px 12px;
+    overflow: hidden; /* выполняет роль clearfix */
+    border-bottom: 2px solid #34495e;
+}
+
+#header .title {
+    float: left;
+    font-size: 18px;
+    font-weight: bold;
+    padding-top: 4px;
+}
+
+#header .user-info {
+    float: left;
+    margin-left: 16px;
+    padding-top: 6px;
+    font-size: 13px;
+    color: #bdc3c7;
+}
+
+#header .buttons {
+    float: right;
+    padding-top: 2px;
+}
+
+#header .buttons button {
+    margin-left: 4px;
+    padding: 5px 10px;
+    background-color: #34495e;
+    color: #ffffff;
+    border: 1px solid #4a6278;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#header .buttons button:hover {
+    background-color: #4a6278;
+}
+
+/* --- Панель настроек --- */
+#settingsPanel {
+    background-color: #ecf0f1;
+    border-bottom: 1px solid #bdc3c7;
+    padding: 12px;
+    display: none;
+}
+
+#settingsPanel h3 {
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+#settingsPanel .row {
+    margin-bottom: 10px;
+}
+
+#settingsPanel label {
+    display: block;
+    font-size: 12px;
+    color: #555555;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+#settingsPanel input[type="text"] {
+    padding: 4px;
+    border: 1px solid #cccccc;
+    font-size: 13px;
+    width: 100px;
+    background-color: #ffffff;
+}
+
+#settingsPanel .preset-btn {
+    padding: 3px 8px;
+    margin: 2px 2px 0 0;
+    border: 1px solid #999999;
+    background-color: #ffffff;
+    cursor: pointer;
+    font-size: 11px;
+    display: inline-block;
+    color: #333333;
+}
+
+#settingsPanel .preset-btn:hover {
+    background-color: #f0f0f0;
+}
+
+#clearChatBtn {
+    background-color: #e74c3c;
+    color: #ffffff;
+    border: 1px solid #c0392b;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+#clearChatBtn:hover {
+    background-color: #c0392b;
+}
+
+/* --- Область сообщений --- */
+#messagesArea {
+    height: 400px;
+    overflow: auto;     /* прокрутка в старых браузерах */
+    padding: 12px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #cccccc;
+}
+
+.empty-hint {
+    text-align: center;
+    color: #999999;
+    padding: 40px 10px;
+    font-style: italic;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-left: 3px solid #3498db;
+    word-wrap: break-word;        /* перенос длинных слов — работает в IE6 */
+    overflow: hidden;             /* clearfix + обрезка лишнего */
+}
+
+.message.own {
+    border-left-color: #27ae60;
+    background-color: #eafaf1;
+}
+
+.message .msg-header {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-bottom: 4px;
+}
+
+.message .msg-name {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.message.own .msg-name {
+    color: #27ae60;
+}
+
+.message .msg-text {
+    font-size: 14px;
+    color: #333333;
+}
+
+.message .msg-image {
+    margin-top: 8px;
+}
+
+.message .msg-image img {
+    max-width: 100%;
+    border: 1px solid #cccccc;
+    display: block;
+}
+
+/* --- Ссылки в сообщениях --- */
+.message .msg-text a {
+    color: #2980b9;
+    text-decoration: underline;
+}
+.message .msg-text a:visited {
+    color: #8e44ad;
+}
+
+/* --- Кнопка «Загрузить ещё» (вверху области сообщений) --- */
+#loadMoreWrap {
+    text-align: center;
+    padding: 8px 0 12px 0;
+}
+#loadMoreBtn {
+    padding: 6px 16px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #95a5a6;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+#loadMoreBtn:hover {
+    background-color: #d6dbdf;
+}
+#loadMoreHint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #95a5a6;
+}
+
+/* --- Индикатор «Печатает...» --- */
+#typingIndicator {
+    display: none;
+    padding: 4px 12px 6px 12px;
+    background-color: #fafafa;
+    border-top: 1px solid #eeeeee;
+    font-size: 12px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+#typingIndicator .typing-dots {
+    display: inline-block;
+    color: #3498db;
+    font-weight: bold;
+}
+
+/* --- Поле ввода --- */
+#inputArea {
+    padding: 10px 12px;
+    background-color: #ffffff;
+    border-top: 1px solid #cccccc;
+}
+
+#smileysBar {
+    margin-bottom: 6px;
+    padding: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+}
+
+#smileysBar .smiley {
+    display: inline-block;
+    margin: 1px 2px;
+    padding: 2px 6px;
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#smileysBar .smiley:hover {
+    background-color: #e8e8e8;
+}
+
+#msgInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cccccc;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+#sendBtn {
+    padding: 8px 18px;
+    background-color: #27ae60;
+    color: #ffffff;
+    border: 1px solid #229954;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+#sendBtn:hover {
+    background-color: #229954;
+}
+
+#fileInput {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+#fileUnsupported {
+    display: none;
+    color: #7f8c8d;
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 6px;
+}
+
+/* --- Статус-бар (с индикатором соединения) --- */
+#statusBar {
+    padding: 4px 12px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #cccccc;
+    font-size: 12px;
+    color: #555555;
+}
+
+#statusBar .dot {
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+.dot-ok    { color: #27ae60; }
+.dot-err   { color: #e74c3c; }
+.dot-wait  { color: #f39c12; }
+
+/* --- Уведомление о новых сообщениях (когда вкладка неактивна) --- */
+#toast {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    background-color: #e74c3c;
+    color: #ffffff;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    display: none;
+    border: 1px solid #c0392b;
+    cursor: pointer;
+}
+
+/* ============================================================
+   АДАПТИВНОСТЬ ДЛЯ УЗКИХ ЭКРАНОВ (мобильные устройства)
+   Медиа-запросы игнорируются в IE6, поэтому базовый вид остаётся
+   читаемым. Для современных мобильных — улучшаем юзабилити:
+   - Кнопка отправки на всю ширину
+   - Больше отступов для удобства касания
+   - Элементы ввода в столбик
+   ============================================================ */
+@media (max-width: 600px) {
+    /* Шапка: прячем user-info и делаем кнопки компактнее */
+    #header .user-info { display: none; }
+    #header .title { font-size: 16px; }
+    #header .buttons button {
+        margin-left: 2px;
+        padding: 5px 7px;
+        font-size: 11px;
+    }
+
+    /* Область сообщений чуть ниже для экономии места */
+    #messagesArea { height: 300px; padding: 8px; }
+
+    /* Поле ввода — больше воздуха для пальцев */
+    #inputArea { padding: 8px; }
+    #msgInput {
+        padding: 12px;
+        font-size: 16px; /* iOS не зумит при фокусе, если >=16px */
+    }
+
+    /* Таблицу ввода превращаем в вертикальную раскладку:
+       поле на всю ширину, кнопка под ним */
+    #inputTable td {
+        display: block;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+    #sendBtn {
+        width: 100%;
+        padding: 12px;
+        margin-top: 8px;
+        font-size: 16px;
+    }
+
+    /* Файл-инпут занимает всю ширину */
+    #fileInput {
+        width: 100%;
+        margin-top: 8px;
+        padding: 6px;
+    }
+
+    /* Смайлы делаем крупнее для касания */
+    #smileysBar .smiley {
+        padding: 4px 8px;
+        font-size: 16px;
+    }
+
+    /* Формы пароля/имени — на всю ширину */
+    .form-box {
+        width: auto;
+        margin: 0 12px;
+    }
+
+    /* Панель настроек — отступы поменьше */
+    #settingsPanel { padding: 8px; }
+    #settingsPanel .preset-btn {
+        padding: 5px 8px;
+        margin: 2px;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     ЭКРАН 1: ВВОД ПАРОЛЯ
+     ============================================================ -->
+<div id="authScreen" class="screen">
+    <div class="form-box">
+        <h2>Вход в чат</h2>
+        <p class="hint">Введите пароль для доступа</p>
+        <input type="password" id="passInput" placeholder="Пароль"
+               onkeydown="if(event.keyCode==13){checkPassword();}">
+        <button onclick="checkPassword()">Войти</button>
+        <div id="authError" class="error-msg"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     ЭКРАН 2: ВВОД ИМЕНИ ПОЛЬЗОВАТЕЛЯ
+     ============================================================ -->
+<div id="nameScreen" class="screen" style="display:none">
+    <div class="form-box">
+        <h2>Как вас зовут?</h2>
+        <p class="hint">Это имя будут видеть другие участники</p>
+        <input type="text" id="nameInput" placeholder="Ваше имя" maxlength="30"
+               onkeydown="if(event.keyCode==13){saveName();}">
+        <button onclick="saveName()">Сохранить и войти</button>
+        <div id="nameError" class="error-msg"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     ЭКРАН 3: ОСНОВНОЙ ЧАТ
+     ============================================================ -->
+<div id="chatScreen" class="screen" style="display:none">
+
+    <!-- Шапка -->
+    <div id="header">
+        <span class="title">Веб-чат</span>
+        <span class="user-info" id="userInfo"></span>
+        <span class="buttons">
+            <button onclick="toggleSettings()">Настройки</button>
+            <button onclick="changeName()">Сменить имя</button>
+            <button onclick="logout()">Выйти</button>
+        </span>
+    </div>
+
+    <!-- Панель настроек (скрыта по умолчанию) -->
+    <div id="settingsPanel">
+
+        <div class="row">
+            <label>Цвет фона страницы</label>
+            <input type="text" id="bgColorInput" value="#e8e8e8" onchange="applyBgColor()">
+            <span class="preset-btn" onclick="setBgPreset('#e8e8e8')">По умолч.</span>
+            <span class="preset-btn" onclick="setBgPreset('#ffffff')">Белый</span>
+            <span class="preset-btn" onclick="setBgPreset('#cccccc')">Серый</span>
+            <span class="preset-btn" onclick="setBgPreset('#2c3e50')">Тёмный</span>
+            <span class="preset-btn" onclick="setBgPreset('#1e3a8a')">Синий</span>
+            <span class="preset-btn" onclick="setBgPreset('#1a6b1a')">Зелёный</span>
+        </div>
+
+        <div class="row">
+            <label>Цвет области сообщений</label>
+            <input type="text" id="msgBgColorInput" value="#ffffff" onchange="applyMsgBgColor()">
+            <span class="preset-btn" onclick="setMsgBgPreset('#ffffff')">Белый</span>
+            <span class="preset-btn" onclick="setMsgBgPreset('#f8f9fa')">Светло-серый</span>
+            <span class="preset-btn" onclick="setMsgBgPreset('#e0e0e0')">Серый</span>
+            <span class="preset-btn" onclick="setMsgBgPreset('#2c3e50')">Тёмный</span>
+            <span class="preset-btn" onclick="setMsgBgPreset('#1a1a1a')">Чёрный</span>
+        </div>
+
+        <div class="row">
+            <button id="clearChatBtn" onclick="clearChat()">Очистить чат (удалить все сообщения)</button>
+        </div>
+
+    </div>
+
+    <!-- Область сообщений -->
+    <div id="messagesArea">
+        <div class="empty-hint">Загрузка сообщений...</div>
+    </div>
+
+    <!-- Поле ввода -->
+    <div id="inputArea">
+
+        <div id="smileysBar"></div>
+
+        <!-- Таблица для надёжного размещения поля и кнопки в старых браузерах -->
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+            <tr>
+                <td style="width:85%; padding-right:6px; vertical-align:middle;">
+                    <input type="text" id="msgInput" placeholder="Введите сообщение..."
+                           onkeydown="if(event.keyCode==13){sendMessage();}">
+                </td>
+                <td style="width:15%; text-align:right; vertical-align:middle;">
+                    <button id="sendBtn" onclick="sendMessage()">Отправить</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding-top:6px;">
+                    <input type="file" id="fileInput" accept="image/*">
+                    <span id="fileUnsupported">Загрузка фото недоступна в этом браузере (только текст)</span>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- Статус-бар -->
+    <div id="statusBar"><span class="dot dot-wait">●</span> Подключение к чату...</div>
+</div>
+
+<!-- Уведомление о новых сообщениях -->
+<div id="toast" onclick="this.style.display='none';"></div>
+
+<script>
+/* ============================================================
+   КОНФИГУРАЦИЯ
+   ============================================================ */
+
+// URL вашей Firebase Realtime Database.
+// Замените на свой: "https://ваш-проект.firebaseio.com"
+var databaseURL = "https://webretrochat-default-rtdb.firebaseio.com";
+
+// Пароль для входа в чат
+var PASSWORD = "228";
+
+// Интервал опроса сообщений (мс)
+var POLL_INTERVAL = 2000;
+
+// Максимальный размер изображения (10 МБ).
+// Firebase может не принимать слишком большие payload — 10 МБ разумный лимит.
+var MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+/* ============================================================
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ (только var — для совместимости с IE6)
+   ============================================================ */
+
+var userName = "";          // Имя текущего пользователя
+var pollTimer = null;       // Идентификатор таймера опроса
+var isPolling = false;      // Флаг: идёт ли сейчас HTTP-запрос
+var lastMsgCount = 0;       // Кол-во сообщений при прошлом опросе
+var lastSeenKey = null;     // Ключ последнего seen-сообщения (необязательно)
+var windowFocused = true;   // Фокус на вкладке (для уведомлений)
+var unreadCount = 0;        // Кол-во непрочитанных сообщений
+
+/* ============================================================
+   ПОЛИФИЛЫ ДЛЯ СТАРЫХ БРАУЗЕРОВ
+   ============================================================ */
+
+/*
+   Создание XMLHttpRequest с поддержкой IE6/IE5.5.
+   Современные браузеры используют new XMLHttpRequest().
+   IE6 использует ActiveXObject.
+*/
+function createXHR() {
+    try { return new XMLHttpRequest(); } catch (e) {}
+    try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (e) {}
+    try { return new ActiveXObject("Microsoft.XMLHTTP"); } catch (e) {}
+    return null;
+}
+
+/*
+   Минимальная реализация JSON.stringify / JSON.parse
+   для браузеров без встроенного JSON (IE6, IE7).
+   stringify поддерживает строки, числа, булевы, null, массивы, объекты.
+*/
+var JSON = window.JSON || {};
+if (!JSON.stringify) {
+    JSON.stringify = function(obj) {
+        var t = typeof obj;
+        if (t !== "object" || obj === null) {
+            // Примитивные типы
+            if (t === "string") {
+                return '"' + obj.replace(/\\/g, "\\\\")
+                                .replace(/"/g, '\\"')
+                                .replace(/\n/g, "\\n")
+                                .replace(/\r/g, "\\r")
+                                .replace(/\t/g, "\\t") + '"';
+            }
+            if (t === "number") {
+                return isFinite(obj) ? String(obj) : "null";
+            }
+            if (t === "boolean") {
+                return String(obj);
+            }
+            return "null";
+        }
+        // Рекурсивно обрабатываем массивы и объекты
+        var parts = [];
+        var isArray = (obj && obj.constructor === Array);
+        var k;
+        for (k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                var v = JSON.stringify(obj[k]);
+                if (v !== null) {
+                    if (isArray) {
+                        parts.push(v);
+                    } else {
+                        parts.push('"' + k + '":' + v);
+                    }
+                }
+            }
+        }
+        return isArray ? ("[" + parts.join(",") + "]") : ("{" + parts.join(",") + "}");
+    };
+}
+if (!JSON.parse) {
+    JSON.parse = function(str) {
+        if (!str || str.length === 0) return null;
+        // Используем eval — для доверенных данных Firebase это допустимо.
+        // В современных браузерах используется встроенный безопасный парсер.
+        try {
+            return eval("(" + str + ")");
+        } catch (e) {
+            return null;
+        }
+    };
+}
+
+/* Проверка доступности localStorage (IE6 не поддерживает) */
+function hasLocalStorage() {
+    try {
+        var test = "__test__";
+        window.localStorage.setItem(test, test);
+        window.localStorage.removeItem(test);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+function getLS(key) {
+    if (!hasLocalStorage()) return null;
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+}
+
+function setLS(key, value) {
+    if (!hasLocalStorage()) return;
+    try { window.localStorage.setItem(key, value); } catch (e) {}
+}
+
+function removeLS(key) {
+    if (!hasLocalStorage()) return;
+    try { window.localStorage.removeItem(key); } catch (e) {}
+}
+
+/* Проверка поддержки FileReader (нужна для загрузки изображений) */
+function hasFileReader() {
+    return typeof window.FileReader !== "undefined";
+}
+
+/* Простой trim() для строк (IE6 не имеет String.prototype.trim) */
+function trimStr(s) {
+    if (s === null || s === undefined) return "";
+    s = String(s);
+    return s.replace(/^\s+/, "").replace(/\s+$/, "");
+}
+
+/* ============================================================
+   АУТЕНТИФИКАЦИЯ
+   ============================================================ */
+
+/*
+   Проверка пароля.
+   Пароль жёстко зашит в переменной PASSWORD.
+   После успешного ввода устанавливаем флаг chat_authed в localStorage,
+   чтобы при перезагрузке не спрашивать пароль повторно.
+*/
+function checkPassword() {
+    var input = document.getElementById("passInput").value;
+    var errEl = document.getElementById("authError");
+
+    if (input === PASSWORD) {
+        // Пароль верный
+        setLS("chat_authed", "1");
+        errEl.innerHTML = "";
+        proceedAfterAuth();
+    } else {
+        // Пароль неверный
+        errEl.innerHTML = "Неверный пароль!";
+        document.getElementById("passInput").value = "";
+        document.getElementById("passInput").focus();
+    }
+}
+
+/*
+   Действия после успешного ввода пароля.
+   Если имя пользователя уже сохранено — открываем чат сразу.
+   Иначе — показываем форму ввода имени.
+*/
+function proceedAfterAuth() {
+    var savedName = getLS("chat_username");
+    if (savedName && trimStr(savedName).length > 0) {
+        userName = savedName;
+        openChat();
+    } else {
+        showScreen("nameScreen");
+        setTimeout(function() {
+            var ni = document.getElementById("nameInput");
+            if (ni) ni.focus();
+        }, 100);
+    }
+}
+
+/*
+   Сохранение имени пользователя.
+   Имя пишется в localStorage и восстанавливается при перезагрузке.
+*/
+function saveName() {
+    var input = document.getElementById("nameInput").value;
+    var errEl = document.getElementById("nameError");
+    input = trimStr(input);
+
+    if (input.length === 0) {
+        errEl.innerHTML = "Введите имя!";
+        return;
+    }
+    if (input.length > 30) {
+        errEl.innerHTML = "Имя слишком длинное (макс. 30 символов)";
+        return;
+    }
+
+    userName = input;
+    setLS("chat_username", userName);
+    openChat();
+}
+
+/* Смена имени пользователя из чата (с сохранением в localStorage) */
+function changeName() {
+    var newName = window.prompt("Введите новое имя:", userName);
+    if (newName === null) return; // пользователь нажал "Отмена"
+    newName = trimStr(newName);
+    if (newName.length === 0) {
+        window.alert("Имя не может быть пустым!");
+        return;
+    }
+    if (newName.length > 30) {
+        window.alert("Имя слишком длинное (макс. 30 символов)");
+        return;
+    }
+    userName = newName;
+    setLS("chat_username", userName);
+    document.getElementById("userInfo").innerHTML = "Вы: " + escapeHtml(userName);
+}
+
+/* Выход из чата: очищаем сохранённые данные, показываем экран пароля */
+function logout() {
+    if (window.confirm("Выйти из чата? Сохранённое имя будет удалено из этого браузера.")) {
+        removeLS("chat_authed");
+        removeLS("chat_username");
+        stopPolling();
+        userName = "";
+        showScreen("authScreen");
+        document.getElementById("passInput").value = "";
+        document.getElementById("passInput").focus();
+    }
+}
+
+/* ============================================================
+   УПРАВЛЕНИЕ ЭКРАНАМИ
+   ============================================================ */
+
+/* Показ нужного экрана, скрытие остальных */
+function showScreen(id) {
+    var screens = ["authScreen", "nameScreen", "chatScreen"];
+    for (var i = 0; i < screens.length; i++) {
+        var el = document.getElementById(screens[i]);
+        if (el) {
+            el.style.display = (screens[i] === id) ? "block" : "none";
+        }
+    }
+}
+
+/*
+   Открытие чата.
+   Инициализирует интерфейс, загружает настройки, запускает опрос.
+*/
+function openChat() {
+    showScreen("chatScreen");
+
+    // Отображаем имя пользователя
+    document.getElementById("userInfo").innerHTML = "Вы: " + escapeHtml(userName);
+
+    // Проверяем поддержку FileReader. Если нет — скрываем поле файла.
+    if (!hasFileReader()) {
+        document.getElementById("fileInput").style.display = "none";
+        document.getElementById("fileUnsupported").style.display = "inline";
+    }
+
+    // Инициализация панели смайлов
+    initSmileys();
+
+    // Загрузка сохранённых настроек цвета
+    loadSettings();
+
+    // Отслеживание фокуса вкладки (для уведомлений)
+    setupFocusTracking();
+
+    // Проверка, что databaseURL настроен
+    if (databaseURL.indexOf("YOUR-PROJECT") !== -1) {
+        setStatus("ВНИМАНИЕ: Укажите databaseURL в коде!", "err");
+    }
+
+    // Запуск опроса сообщений
+    startPolling();
+
+    // Фокус на поле ввода
+    setTimeout(function() {
+        var mi = document.getElementById("msgInput");
+        if (mi) mi.focus();
+    }, 100);
+}
+
+/* ============================================================
+   РАБОТА С FIREBASE (REST API через XMLHttpRequest)
+   ============================================================ */
+
+/*
+   Универсальная функция HTTP-запроса к Firebase.
+
+   method: "GET" | "POST" | "PUT" | "DELETE"
+   path:   путь внутри базы, например "/messages.json"
+   body:   строка JSON для POST/PUT, либо null для GET/DELETE
+   callback: function(err, responseText)
+*/
+function firebaseRequest(method, path, body, callback) {
+    var xhr = createXHR();
+    if (!xhr) {
+        callback("Браузер не поддерживает XMLHttpRequest", null);
+        return;
+    }
+
+    // URL с защитой от кэширования (важно для IE)
+    var url = databaseURL + path;
+    var sep = (url.indexOf("?") === -1) ? "?" : "&";
+    url += sep + "ts=" + new Date().getTime();
+
+    xhr.open(method, url, true);
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            try {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    callback(null, xhr.responseText);
+                } else {
+                    callback("HTTP " + xhr.status, null);
+                }
+            } catch (e) {
+                callback("Ошибка обработки ответа", null);
+            }
+        }
+    };
+
+    // Обработка сетевых ошибок (старые IE не вызывают onerror надёжно)
+    xhr.ontimeout = function() {
+        callback("Таймаут запроса", null);
+    };
+
+    try {
+        if (method === "POST" || method === "PUT") {
+            xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+            xhr.send(body);
+        } else {
+            xhr.send(null);
+        }
+    } catch (e) {
+        callback("Ошибка отправки: " + e.message, null);
+    }
+}
+
+/*
+   Отправка сообщения.
+   Если выбран файл-изображение, читаем его как Data URL (base64),
+   затем отправляем текст + imageUrl вместе.
+*/
+function sendMessage() {
+    var textInput = document.getElementById("msgInput");
+    var fileInput = document.getElementById("fileInput");
+    var text = textInput.value;
+
+    var hasText = trimStr(text).length > 0;
+    var hasFile = (hasFileReader() && fileInput.files && fileInput.files.length > 0);
+
+    // Если нет ни текста, ни файла — ничего не делаем
+    if (!hasText && !hasFile) {
+        return;
+    }
+
+    // Если есть файл — обрабатываем изображение
+    if (hasFile) {
+        var file = fileInput.files[0];
+
+        // Проверка, что это изображение
+        if (file.type && file.type.indexOf("image/") !== 0) {
+            window.alert("Можно загружать только изображения!");
+            return;
+        }
+
+        // Проверка размера
+        if (file.size > MAX_IMAGE_SIZE) {
+            window.alert("Файл слишком большой! Максимум " +
+                         (MAX_IMAGE_SIZE / 1024 / 1024) + " МБ");
+            return;
+        }
+
+        // Читаем файл как Data URL (base64)
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            doSend(text, e.target.result);
+        };
+        reader.onerror = function() {
+            window.alert("Не удалось прочитать файл. Попробуйте другое изображение.");
+            setStatus("Ошибка чтения файла", "err");
+        };
+        reader.readAsDataURL(file);
+        return;
+    }
+
+    // Если нет файла — просто отправляем текст
+    doSend(text, "");
+}
+
+/*
+   Фактическая отправка данных в Firebase.
+   Формат сообщения:
+   {
+     name:      строка (имя пользователя),
+     text:      строка (текст сообщения),
+     imageUrl:  строка (Data URL или пустая строка),
+     timestamp: число (миллисекунды от 1970)
+   }
+*/
+function doSend(text, imageUrl) {
+    var msg = {
+        name: userName,
+        text: text,
+        imageUrl: imageUrl,
+        timestamp: new Date().getTime()
+    };
+
+    var body = JSON.stringify(msg);
+    setStatus("Отправка сообщения...", "wait");
+
+    firebaseRequest("POST", "/messages.json", body, function(err, resp) {
+        if (err) {
+            setStatus("Ошибка отправки: " + err, "err");
+            window.alert("Не удалось отправить сообщение. Проверьте подключение к интернет и URL базы.");
+            return;
+        }
+        // Очищаем поля ввода
+        document.getElementById("msgInput").value = "";
+        document.getElementById("fileInput").value = "";
+        setStatus("Сообщение отправлено", "ok");
+        // Запрашиваем обновление сразу, не дожидаясь таймера
+        setTimeout(pollMessages, 200);
+    });
+}
+
+/*
+   Опрос сообщений (каждые POLL_INTERVAL мс).
+   Получаем весь узел messages и перерисовываем список.
+*/
+function pollMessages() {
+    if (isPolling) return; // не запускаем параллельные запросы
+    isPolling = true;
+
+    firebaseRequest("GET", "/messages.json", null, function(err, resp) {
+        isPolling = false;
+        if (err) {
+            setStatus("Нет соединения (" + err + ")", "err");
+            return;
+        }
+
+        var data = JSON.parse(resp);
+        renderMessages(data);
+        var count = countMessages(data);
+        setStatus("Соединение установлено. Сообщений: " + count, "ok");
+    });
+}
+
+/* Подсчёт количества ключей в объекте сообщений */
+function countMessages(data) {
+    if (!data) return 0;
+    var n = 0;
+    for (var k in data) {
+        if (data.hasOwnProperty(k)) n++;
+    }
+    return n;
+}
+
+/* ============================================================
+   ОТРИСОВКА СООБЩЕНИЙ
+   ============================================================ */
+
+/*
+   Отрисовка всех сообщений.
+   data — объект {key: {name, text, imageUrl, timestamp}, ...} или null.
+*/
+function renderMessages(data) {
+    var area = document.getElementById("messagesArea");
+    if (!area) return;
+
+    // Если данных нет
+    if (!data) {
+        if (area.innerHTML.indexOf("empty-hint") === -1 || lastMsgCount > 0) {
+            area.innerHTML = '<div class="empty-hint">Сообщений пока нет. Напишите первое!</div>';
+        }
+        lastMsgCount = 0;
+        return;
+    }
+
+    // Собираем сообщения в массив
+    var arr = [];
+    var key;
+    for (key in data) {
+        if (data.hasOwnProperty(key)) {
+            var m = data[key];
+            if (m && typeof m === "object") {
+                arr.push(m);
+            }
+        }
+    }
+
+    // Сортировка по времени (хронологический порядок)
+    arr.sort(function(a, b) {
+        var ta = a.timestamp || 0;
+        var tb = b.timestamp || 0;
+        return ta - tb;
+    });
+
+    // Запоминаем, был ли пользователь внизу (для автопрокрутки)
+    var wasAtBottom = isScrolledToBottom();
+
+    // Строим HTML всех сообщений
+    var html = "";
+    var i;
+    for (i = 0; i < arr.length; i++) {
+        html += buildMessageHtml(arr[i]);
+    }
+    if (html === "") {
+        html = '<div class="empty-hint">Сообщений пока нет. Напишите первое!</div>';
+    }
+    area.innerHTML = html;
+
+    // Автопрокрутка вниз при появлении новых сообщений
+    var newCount = arr.length;
+    if (newCount > lastMsgCount) {
+        // Прокручиваем вниз (новые сообщения)
+        scrollToBottom();
+        // Уведомление, если вкладка не в фокусе
+        if (!windowFocused && lastMsgCount > 0) {
+            unreadCount += (newCount - lastMsgCount);
+            showToast("Новых сообщений: " + unreadCount);
+        }
+    } else if (wasAtBottom) {
+        // Если были внизу и нет новых — тоже внизу
+        scrollToBottom();
+    }
+
+    lastMsgCount = newCount;
+}
+
+/*
+   Построение HTML одного сообщения.
+   Все пользовательские данные экранируются (защита от XSS).
+*/
+function buildMessageHtml(msg) {
+    var name = msg.name || "Аноним";
+    var text = msg.text || "";
+    var imageUrl = msg.imageUrl || "";
+    var ts = msg.timestamp || 0;
+
+    var timeStr = formatTime(ts);
+    var isOwn = (name === userName);
+
+    var cls = isOwn ? "message own" : "message";
+
+    var html = '<div class="' + cls + '">';
+    html += '<div class="msg-header"><span class="msg-name">' +
+            escapeHtml(name) + '</span> · ' + timeStr + '</div>';
+
+    if (text.length > 0) {
+        html += '<div class="msg-text">' + escapeHtml(text) + '</div>';
+    }
+
+    // Изображение показываем только если это корректный data:image URL
+    if (imageUrl && imageUrl.length > 0 && imageUrl.indexOf("data:image/") === 0) {
+        html += '<div class="msg-image"><img src="' + escapeHtml(imageUrl) +
+                '" alt="Фото" onload="scrollToBottomIfAtBottom()"></div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+/*
+   Форматирование времени из timestamp (мс) в строку ДД.ММ ЧЧ:ММ
+*/
+function formatTime(ts) {
+    if (!ts) return "";
+    var d = new Date(ts);
+    if (isNaN(d.getTime())) return "";
+
+    var day = d.getDate();
+    var month = d.getMonth() + 1;
+    var hours = d.getHours();
+    var minutes = d.getMinutes();
+
+    // Дополнение нулями
+    if (day < 10) day = "0" + day;
+    if (month < 10) month = "0" + month;
+    if (hours < 10) hours = "0" + hours;
+    if (minutes < 10) minutes = "0" + minutes;
+
+    return day + "." + month + " " + hours + ":" + minutes;
+}
+
+/* ============================================================
+   УПРАВЛЕНИЕ ОПРОСОМ
+   ============================================================ */
+
+function startPolling() {
+    stopPolling();
+    // Сразу делаем первый запрос
+    pollMessages();
+    // Запускаем периодический опрос каждые POLL_INTERVAL мс
+    pollTimer = setInterval(pollMessages, POLL_INTERVAL);
+}
+
+function stopPolling() {
+    if (pollTimer !== null) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+    }
+}
+
+/* ============================================================
+   ПРОКРУТКА
+   ============================================================ */
+
+/* Проверка: прокручен ли список в самый низ */
+function isScrolledToBottom() {
+    var area = document.getElementById("messagesArea");
+    if (!area) return true;
+    return (area.scrollHeight - area.scrollTop - area.clientHeight) < 80;
+}
+
+/* Прокрутка в самый низ */
+function scrollToBottom() {
+    var area = document.getElementById("messagesArea");
+    if (area) area.scrollTop = area.scrollHeight;
+}
+
+/* Прокрутка вниз только если уже были внизу (вызывается при загрузке картинки) */
+function scrollToBottomIfAtBottom() {
+    if (isScrolledToBottom()) scrollToBottom();
+}
+
+/* ============================================================
+   УВЕДОМЛЕНИЯ
+   ============================================================ */
+
+/* Отслеживание фокуса вкладки (для уведомлений о новых сообщениях) */
+function setupFocusTracking() {
+    if (window.addEventListener) {
+        window.addEventListener("focus", function() {
+            windowFocused = true;
+            unreadCount = 0;
+            hideToast();
+        }, false);
+        window.addEventListener("blur", function() {
+            windowFocused = false;
+        }, false);
+    } else if (window.attachEvent) {
+        window.attachEvent("onfocus", function() {
+            windowFocused = true;
+            unreadCount = 0;
+            hideToast();
+        });
+        window.attachEvent("onblur", function() {
+            windowFocused = false;
+        });
+    }
+}
+
+/* Показ всплывающего уведомления */
+function showToast(text) {
+    var toast = document.getElementById("toast");
+    if (toast) {
+        toast.innerHTML = escapeHtml(text);
+        toast.style.display = "block";
+    }
+    // Меняем заголовок вкладки
+    try {
+        document.title = "(" + unreadCount + ") Веб-чат";
+    } catch (e) {}
+}
+
+function hideToast() {
+    var toast = document.getElementById("toast");
+    if (toast) toast.style.display = "none";
+    document.title = "Веб-чат";
+}
+
+/* ============================================================
+   СМАЙЛЫ
+   ============================================================ */
+
+/* Инициализация панели смайлов */
+function initSmileys() {
+    var bar = document.getElementById("smileysBar");
+    if (!bar) return;
+
+    var smileys = [
+        ":)", ":(", ":D", ";)", ":P", "<3", ":O",
+        ":-)", ":-D", ";-)", "B)", ":'(", ":|", ":-/",
+        "^_^", "o_O", ">:(", ":-*", ":yes:", ":no:"
+    ];
+
+    var html = "";
+    var i;
+    for (i = 0; i < smileys.length; i++) {
+        var s = smileys[i];
+        // Экранируем кавычки для вставки в onclick
+        var safe = s.replace(/'/g, "\\'");
+        html += '<span class="smiley" onclick="insertSmiley(\'' + safe + '\')">' +
+                escapeHtml(s) + '</span>';
+    }
+    bar.innerHTML = html;
+}
+
+/* Вставка смайла в поле ввода */
+function insertSmiley(s) {
+    var input = document.getElementById("msgInput");
+    input.value = input.value + " " + s + " ";
+    input.focus();
+}
+
+/* ============================================================
+   НАСТРОЙКИ ВНЕШНЕГО ВИДА
+   ============================================================ */
+
+function toggleSettings() {
+    var panel = document.getElementById("settingsPanel");
+    if (panel.style.display === "none" || panel.style.display === "") {
+        panel.style.display = "block";
+    } else {
+        panel.style.display = "none";
+    }
+}
+
+/* Загрузка сохранённых настроек цвета из localStorage */
+function loadSettings() {
+    var bg = getLS("chat_bg_color");
+    var msgBg = getLS("chat_msg_bg_color");
+
+    if (bg) {
+        document.body.style.backgroundColor = bg;
+        var bgInput = document.getElementById("bgColorInput");
+        if (bgInput) bgInput.value = bg;
+    }
+    if (msgBg) {
+        var area = document.getElementById("messagesArea");
+        if (area) area.style.backgroundColor = msgBg;
+        var msgInput = document.getElementById("msgBgColorInput");
+        if (msgInput) msgInput.value = msgBg;
+    }
+}
+
+/* Применение цвета фона страницы */
+function applyBgColor() {
+    var c = document.getElementById("bgColorInput").value;
+    document.body.style.backgroundColor = c;
+    setLS("chat_bg_color", c);
+}
+
+/* Применение цвета фона области сообщений */
+function applyMsgBgColor() {
+    var c = document.getElementById("msgBgColorInput").value;
+    var area = document.getElementById("messagesArea");
+    if (area) area.style.backgroundColor = c;
+    setLS("chat_msg_bg_color", c);
+}
+
+/* Установка пресета цвета фона страницы */
+function setBgPreset(color) {
+    document.getElementById("bgColorInput").value = color;
+    applyBgColor();
+}
+
+/* Установка пресета цвета фона сообщений */
+function setMsgBgPreset(color) {
+    document.getElementById("msgBgColorInput").value = color;
+    applyMsgBgColor();
+}
+
+/* ============================================================
+   ОЧИСТКА ЧАТА
+   ============================================================ */
+
+/*
+   Очистка чата: удаляем все сообщения из узла messages.
+   Сначала запрашиваем подтверждение (confirm), затем отправляем DELETE.
+   Если DELETE не поддерживается — используем PUT с null (та же логика).
+*/
+function clearChat() {
+    if (!window.confirm("Удалить ВСЕ сообщения из чата? Это действие необратимо!")) {
+        return;
+    }
+
+    setStatus("Очистка чата...", "wait");
+
+    // Пробуем DELETE
+    firebaseRequest("DELETE", "/messages.json", null, function(err, resp) {
+        if (err) {
+            // Fallback: PUT с null (удаляет узел в Firebase)
+            firebaseRequest("PUT", "/messages.json", "null", function(err2, resp2) {
+                if (err2) {
+                    setStatus("Ошибка очистки: " + err2, "err");
+                    window.alert("Не удалось очистить чат. Попробуйте позже или проверьте права доступа к базе.");
+                    return;
+                }
+                finishClear();
+            });
+        } else {
+            finishClear();
+        }
+    });
+}
+
+/* Завершение очистки: обнуляем счётчики и перерисовываем */
+function finishClear() {
+    document.getElementById("messagesArea").innerHTML =
+        '<div class="empty-hint">Чат очищен. Напишите первое сообщение!</div>';
+    lastMsgCount = 0;
+    setStatus("Чат очищен", "ok");
+    setTimeout(pollMessages, 300);
+}
+
+/* ============================================================
+   ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+   ============================================================ */
+
+/*
+   Экранирование HTML (защита от XSS при вставке пользовательского текста).
+   Заменяет &, <, >, ", ' на HTML-сущности.
+*/
+function escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    str = String(str);
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+/*
+   Установка текста и индикатора в статус-бар.
+   type: "ok" | "err" | "wait"
+*/
+function setStatus(text, type) {
+    var el = document.getElementById("statusBar");
+    if (!el) return;
+
+    var dotClass = "dot-wait";
+    if (type === "ok") dotClass = "dot-ok";
+    else if (type === "err") dotClass = "dot-err";
+
+    el.innerHTML = '<span class="dot ' + dotClass + '">●</span> ' + escapeHtml(text);
+}
+
+/* ============================================================
+   ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+   ============================================================ */
+
+/*
+   Точка входа.
+   Если пользователь уже вводил пароль (флаг в localStorage) —
+   переходим сразу к проверке имени. Иначе показываем экран пароля.
+*/
+function init() {
+    var authed = getLS("chat_authed");
+    if (authed === "1") {
+        proceedAfterAuth();
+    } else {
+        showScreen("authScreen");
+        setTimeout(function() {
+            var pi = document.getElementById("passInput");
+            if (pi) pi.focus();
+        }, 100);
+    }
+}
+
+/*
+   Запуск init после загрузки DOM.
+   Современные браузеры: DOMContentLoaded.
+   Старые IE: attachEvent("onload").
+   Самый старый вариант: window.onload.
+*/
+if (document.addEventListener) {
+    document.addEventListener("DOMContentLoaded", init, false);
+} else if (window.attachEvent) {
+    window.attachEvent("onload", init);
+} else {
+    window.onload = init;
+}
+
+</script>
+</body>
+</html>
