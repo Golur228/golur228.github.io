@@ -27,7 +27,6 @@
     min-height:100vh;
     min-height:100dvh;
   }
-  /* scanlines overlay */
   body::before{
     content:'';position:fixed;inset:0;pointer-events:none;z-index:200;
     background:repeating-linear-gradient(0deg,
@@ -149,7 +148,6 @@
     text-shadow:none;
   }
 
-  /* Individual accents */
   #cardCS{ --accent:#ffd166; }
   #cardNFS{ --accent:#8fe4ff; }
   #cardPIZZA{ --accent:#ff6b3d; }
@@ -254,7 +252,6 @@
   </footer>
 
 <script>
-  // Keyboard shortcuts: 1 / 2 / 3 — быстрый запуск
   window.addEventListener('keydown', e => {
     if (e.key === '1') location.href = 'game1.html';
     if (e.key === '2') location.href = 'game2.html';
