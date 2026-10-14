@@ -56,21 +56,21 @@
   }
   .sub{
     font-size:10px;line-height:1.7;color:#8fa9c9;
-    max-width:420px;text-align:center;letter-spacing:1px;
+    max-width:460px;text-align:center;letter-spacing:1px;
     margin-top:14px;
   }
 
   .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
     gap:16px;
-    max-width:760px;width:100%;
+    max-width:1020px;width:100%;
     margin-top:28px;
   }
 
   .card{
     position:relative;
-    display:block;
+    display:flex;flex-direction:column;
     text-decoration:none;
     color:#e8eef7;
     background:#0d141d;
@@ -119,9 +119,11 @@
     font-size:10px;line-height:1.7;color:#8fa9c9;
     letter-spacing:1px;text-transform:uppercase;
     margin-bottom:12px;
+    flex-grow:1;
   }
   .card .meta{
     display:flex;flex-wrap:wrap;gap:5px;
+    margin-bottom:4px;
   }
   .card .chip{
     font-size:8px;letter-spacing:1px;
@@ -134,6 +136,7 @@
   }
   .card .playArrow{
     margin-top:14px;
+    align-self:flex-start;
     display:inline-block;
     font-size:10px;letter-spacing:3px;
     padding:8px 16px;
@@ -149,7 +152,8 @@
   /* Individual accents */
   #cardCS{ --accent:#ffd166; }
   #cardNFS{ --accent:#8fe4ff; }
-  #cardNFS h2{ color:#8fe4ff; }
+  #cardPIZZA{ --accent:#ff6b3d; }
+  #cardPIZZA h2{ color:#ff6b3d; }
 
   footer{
     margin-top:32px;
@@ -161,6 +165,21 @@
 
   .blink{ animation:blink 1.4s steps(2,end) infinite; }
   @keyframes blink{ 50%{opacity:.35;} }
+
+  .hotkeys{
+    margin-top:16px;
+    font-size:9px;letter-spacing:2px;color:#5c8bc8;
+    text-align:center;
+  }
+  .hotkeys .k{
+    display:inline-block;
+    padding:2px 8px;margin:0 3px;
+    background:#131c28;border:2px solid #2a3f5c;
+    color:#cfe4ff;
+    box-shadow:0 2px 0 #05080d;
+    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),
+      calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);
+  }
 
   @media (max-width:520px){
     h1{ letter-spacing:4px; }
@@ -175,7 +194,7 @@
   <h1>PIXEL ARCADE</h1>
   <div class="tag">SELECT GAME</div>
   <p class="sub">
-    Две игры в одной обойме. Выбирай режим и вперёд —<br>
+    Три игры в одной обойме. Выбирай режим и вперёд —<br>
     клавиатура, мышь или тач-управление.
   </p>
 
@@ -209,6 +228,24 @@
       <div class="playArrow">▶ ИГРАТЬ</div>
     </a>
 
+    <a class="card" id="cardPIZZA" href="game3.html">
+      <div class="ico">🍕</div>
+      <h2>PIXEL PIZZA</h2>
+      <div class="ver">PIZZERIA EDITION · V1</div>
+      <p>Пиксельная пиццерия. Собирай заказы, нарезай ингредиенты и развози клиентам до закрытия.</p>
+      <div class="meta">
+        <span class="chip">PIZZA</span>
+        <span class="chip">ARCADE</span>
+        <span class="chip">TIME</span>
+        <span class="chip">COMBO</span>
+      </div>
+      <div class="playArrow">▶ ИГРАТЬ</div>
+    </a>
+
+  </div>
+
+  <div class="hotkeys">
+    БЫСТРЫЙ ЗАПУСК: <span class="k">1</span> · <span class="k">2</span> · <span class="k">3</span>
   </div>
 
   <footer>
@@ -217,10 +254,11 @@
   </footer>
 
 <script>
-  // Keyboard shortcuts: 1 / 2 — быстрый запуск
+  // Keyboard shortcuts: 1 / 2 / 3 — быстрый запуск
   window.addEventListener('keydown', e => {
     if (e.key === '1') location.href = 'game1.html';
     if (e.key === '2') location.href = 'game2.html';
+    if (e.key === '3') location.href = 'game3.html';
   });
 </script>
 </body>
