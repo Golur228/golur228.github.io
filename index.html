@@ -8,177 +8,48 @@
 <title>PIXEL ARCADE — SELECT GAME</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{
-    width:100%;min-height:100%;background:#0a0e14;
-    font-family:'Courier New','Consolas','Monaco',monospace;
-    font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;
-    color:#e8eef7;-webkit-user-select:none;user-select:none;
-    -webkit-tap-highlight-color:transparent;
-    overscroll-behavior:none;
-  }
-  body{
-    display:flex;flex-direction:column;align-items:center;
-    padding:24px 16px 40px;
-    background-image:
-      linear-gradient(rgba(30,60,100,.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(30,60,100,.06) 1px, transparent 1px);
-    background-size:16px 16px, 16px 16px;
-    position:relative;
-    min-height:100vh;
-    min-height:100dvh;
-  }
-  body::before{
-    content:'';position:fixed;inset:0;pointer-events:none;z-index:200;
-    background:repeating-linear-gradient(0deg,
-      rgba(0,0,0,0.10) 0 1px,
-      transparent 1px 3px);
-    mix-blend-mode:multiply;
-  }
-
-  h1{
-    font-size:clamp(22px,6vw,38px);
-    letter-spacing:clamp(3px,1.5vw,8px);
-    color:#ffd166;
-    text-shadow:3px 3px 0 #7a4a10, 6px 6px 0 #000;
-    padding:6px 0;
-    text-align:center;
-    margin-top:8px;
-  }
-  .tag{
-    display:inline-block;padding:4px 14px;
-    border:2px solid #ffd166;color:#ffd166;
-    font-size:10px;letter-spacing:4px;
-    text-shadow:1px 1px 0 #000;
-    clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),
-      calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px);
-    margin-top:8px;
-  }
-  .sub{
-    font-size:10px;line-height:1.7;color:#8fa9c9;
-    max-width:460px;text-align:center;letter-spacing:1px;
-    margin-top:14px;
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:16px;
-    max-width:1020px;width:100%;
-    margin-top:28px;
-  }
-
-  .card{
-    position:relative;
-    display:flex;flex-direction:column;
-    text-decoration:none;
-    color:#e8eef7;
-    background:#0d141d;
-    border:3px solid #2a3f5c;
-    padding:18px 16px 20px;
+  html,body{width:100%;min-height:100%;background:#0a0e14;font-family:'Courier New','Consolas','Monaco',monospace;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;color:#e8eef7;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
+  body{display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px;
+    background-image:linear-gradient(rgba(30,60,100,.06) 1px, transparent 1px),linear-gradient(90deg, rgba(30,60,100,.06) 1px, transparent 1px);
+    background-size:16px 16px, 16px 16px;position:relative;min-height:100vh;min-height:100dvh;}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:200;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.10) 0 1px,transparent 1px 3px);mix-blend-mode:multiply;}
+  h1{font-size:clamp(22px,6vw,38px);letter-spacing:clamp(3px,1.5vw,8px);color:#ffd166;text-shadow:3px 3px 0 #7a4a10, 6px 6px 0 #000;padding:6px 0;text-align:center;margin-top:8px;}
+  .tag{display:inline-block;padding:4px 14px;border:2px solid #ffd166;color:#ffd166;font-size:10px;letter-spacing:4px;text-shadow:1px 1px 0 #000;
+    clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px);margin-top:8px;}
+  .sub{font-size:10px;line-height:1.7;color:#8fa9c9;max-width:460px;text-align:center;letter-spacing:1px;margin-top:14px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1020px;width:100%;margin-top:28px;}
+  .card{position:relative;display:flex;flex-direction:column;text-decoration:none;color:#e8eef7;background:#0d141d;border:3px solid #2a3f5c;padding:18px 16px 20px;
     box-shadow:0 6px 0 #05080d, inset 0 0 0 1px #0a1018;
-    clip-path:polygon(
-      6px 0, calc(100% - 6px) 0, 100% 6px,
-      100% calc(100% - 6px), calc(100% - 6px) 100%,
-      6px 100%, 0 calc(100% - 6px), 0 6px);
-    transition:transform .08s ease, box-shadow .08s ease, border-color .15s ease;
-    overflow:hidden;
-    cursor:pointer;
-  }
-  .card::after{
-    content:'';position:absolute;left:0;right:0;top:0;height:3px;
-    background:linear-gradient(90deg,transparent,var(--accent),transparent);
-    opacity:.7;
-  }
-  .card:hover{
-    transform:translate(0,-4px);
-    box-shadow:0 10px 0 #05080d, inset 0 0 0 1px #0a1018;
-    border-color:var(--accent);
-  }
-  .card:active{
-    transform:translate(0,2px);
-    box-shadow:0 2px 0 #05080d, inset 0 0 0 1px #0a1018;
-  }
-
-  .card .ico{
-    font-size:48px;line-height:1;
-    margin-bottom:10px;
-    filter:drop-shadow(2px 2px 0 #000);
-  }
-  .card h2{
-    font-size:20px;letter-spacing:4px;
-    color:var(--accent);
-    text-shadow:2px 2px 0 #000;
-    margin-bottom:4px;
-  }
-  .card .ver{
-    font-size:8px;letter-spacing:3px;color:#5c8bc8;
-    margin-bottom:10px;
-  }
-  .card p{
-    font-size:10px;line-height:1.7;color:#8fa9c9;
-    letter-spacing:1px;text-transform:uppercase;
-    margin-bottom:12px;
-    flex-grow:1;
-  }
-  .card .meta{
-    display:flex;flex-wrap:wrap;gap:5px;
-    margin-bottom:4px;
-  }
-  .card .chip{
-    font-size:8px;letter-spacing:1px;
-    padding:3px 7px;
-    border:1px solid #2a3f5c;
-    background:#131c28;
-    color:#cfe4ff;
-    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),
-      calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);
-  }
-  .card .playArrow{
-    margin-top:14px;
-    align-self:flex-start;
-    display:inline-block;
-    font-size:10px;letter-spacing:3px;
-    padding:8px 16px;
-    background:var(--accent);
-    color:#241a05;
-    border:2px solid rgba(0,0,0,.5);
-    clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),
-      calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px);
-    box-shadow:0 3px 0 rgba(0,0,0,.6);
-    text-shadow:none;
-  }
-
+    clip-path:polygon(6px 0, calc(100% - 6px) 0, 100% 6px,100% calc(100% - 6px), calc(100% - 6px) 100%,6px 100%, 0 calc(100% - 6px), 0 6px);
+    transition:transform .08s ease, box-shadow .08s ease, border-color .15s ease;overflow:hidden;cursor:pointer;}
+  .card::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7;}
+  .card:hover{transform:translate(0,-4px);box-shadow:0 10px 0 #05080d, inset 0 0 0 1px #0a1018;border-color:var(--accent);}
+  .card:active{transform:translate(0,2px);box-shadow:0 2px 0 #05080d, inset 0 0 0 1px #0a1018;}
+  .card .ico{font-size:48px;line-height:1;margin-bottom:10px;filter:drop-shadow(2px 2px 0 #000);}
+  .card h2{font-size:20px;letter-spacing:4px;color:var(--accent);text-shadow:2px 2px 0 #000;margin-bottom:4px;}
+  .card .ver{font-size:8px;letter-spacing:3px;color:#5c8bc8;margin-bottom:10px;}
+  .card p{font-size:10px;line-height:1.7;color:#8fa9c9;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;flex-grow:1;}
+  .card .meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;}
+  .card .chip{font-size:8px;letter-spacing:1px;padding:3px 7px;border:1px solid #2a3f5c;background:#131c28;color:#cfe4ff;
+    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);}
+  .card .playArrow{margin-top:14px;align-self:flex-start;display:inline-block;font-size:10px;letter-spacing:3px;padding:8px 16px;background:var(--accent);color:#241a05;border:2px solid rgba(0,0,0,.5);
+    clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px);
+    box-shadow:0 3px 0 rgba(0,0,0,.6);text-shadow:none;}
   #cardCS{ --accent:#ffd166; }
+  #cardMP{ --accent:#5adc7a; }
   #cardNFS{ --accent:#8fe4ff; }
   #cardPIZZA{ --accent:#ff6b3d; }
   #cardPIZZA h2{ color:#ff6b3d; }
-
-  footer{
-    margin-top:32px;
-    font-size:9px;letter-spacing:2px;
-    color:#5c8bc8;text-align:center;
-    line-height:1.8;
-  }
+  .newBadge{position:absolute;right:10px;top:10px;font-size:8px;letter-spacing:2px;padding:3px 8px;background:#5adc7a;color:#0a0e14;
+    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);
+    box-shadow:0 2px 0 #05080d;font-weight:900;}
+  footer{margin-top:32px;font-size:9px;letter-spacing:2px;color:#5c8bc8;text-align:center;line-height:1.8;}
   footer b{ color:#8fa9c9; }
-
   .blink{ animation:blink 1.4s steps(2,end) infinite; }
   @keyframes blink{ 50%{opacity:.35;} }
-
-  .hotkeys{
-    margin-top:16px;
-    font-size:9px;letter-spacing:2px;color:#5c8bc8;
-    text-align:center;
-  }
-  .hotkeys .k{
-    display:inline-block;
-    padding:2px 8px;margin:0 3px;
-    background:#131c28;border:2px solid #2a3f5c;
-    color:#cfe4ff;
-    box-shadow:0 2px 0 #05080d;
-    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),
-      calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);
-  }
-
+  .hotkeys{margin-top:16px;font-size:9px;letter-spacing:2px;color:#5c8bc8;text-align:center;}
+  .hotkeys .k{display:inline-block;padding:2px 8px;margin:0 3px;background:#131c28;border:2px solid #2a3f5c;color:#cfe4ff;box-shadow:0 2px 0 #05080d;
+    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);}
   @media (max-width:520px){
     h1{ letter-spacing:4px; }
     .card{ padding:14px 12px 16px; }
@@ -192,7 +63,7 @@
   <h1>PIXEL ARCADE</h1>
   <div class="tag">SELECT GAME</div>
   <p class="sub">
-    Три игры в одной обойме. Выбирай режим и вперёд —<br>
+    Четыре игры в одной обойме. Выбирай режим и вперёд —<br>
     клавиатура, мышь или тач-управление.
   </p>
 
@@ -208,6 +79,21 @@
         <span class="chip">RAYCAST</span>
         <span class="chip">7 WEAPONS</span>
         <span class="chip">BOTS</span>
+      </div>
+      <div class="playArrow">▶ ИГРАТЬ</div>
+    </a>
+
+    <a class="card" id="cardMP" href="game4.html">
+      <div class="newBadge">NEW</div>
+      <div class="ico">🌐</div>
+      <h2>MULTIPLAYER</h2>
+      <div class="ver">CO-OP · EXPERIMENT</div>
+      <p>Кооператив против ботов до 4 игроков. Создай комнату, скинь код друзьям — и в бой.</p>
+      <div class="meta">
+        <span class="chip">4 PLAYERS</span>
+        <span class="chip">P2P</span>
+        <span class="chip">ROOM CODE</span>
+        <span class="chip">CO-OP</span>
       </div>
       <div class="playArrow">▶ ИГРАТЬ</div>
     </a>
@@ -243,7 +129,7 @@
   </div>
 
   <div class="hotkeys">
-    БЫСТРЫЙ ЗАПУСК: <span class="k">1</span> · <span class="k">2</span> · <span class="k">3</span>
+    БЫСТРЫЙ ЗАПУСК: <span class="k">1</span> · <span class="k">2</span> · <span class="k">3</span> · <span class="k">4</span>
   </div>
 
   <footer>
@@ -254,8 +140,9 @@
 <script>
   window.addEventListener('keydown', e => {
     if (e.key === '1') location.href = 'game1.html';
-    if (e.key === '2') location.href = 'game2.html';
-    if (e.key === '3') location.href = 'game3.html';
+    if (e.key === '2') location.href = 'game4.html';
+    if (e.key === '3') location.href = 'game2.html';
+    if (e.key === '4') location.href = 'game3.html';
   });
 </script>
 </body>
