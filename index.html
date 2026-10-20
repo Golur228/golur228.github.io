@@ -39,10 +39,12 @@
   #cardMP{ --accent:#5adc7a; }
   #cardNFS{ --accent:#8fe4ff; }
   #cardPIZZA{ --accent:#ff6b3d; }
-  #cardPIZZA h2{ color:#ff6b3d; }
+  #cardDIARY{ --accent:#a855f7; }
+  #cardDIARY h2{ color:#a855f7; }
   .newBadge{position:absolute;right:10px;top:10px;font-size:8px;letter-spacing:2px;padding:3px 8px;background:#5adc7a;color:#0a0e14;
     clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);
     box-shadow:0 2px 0 #05080d;font-weight:900;}
+  .newBadge.purple{background:#a855f7;}
   footer{margin-top:32px;font-size:9px;letter-spacing:2px;color:#5c8bc8;text-align:center;line-height:1.8;}
   footer b{ color:#8fa9c9; }
   .blink{ animation:blink 1.4s steps(2,end) infinite; }
@@ -63,8 +65,8 @@
   <h1>PIXEL ARCADE</h1>
   <div class="tag">SELECT GAME</div>
   <p class="sub">
-    Четыре игры в одной обойме. Выбирай режим и вперёд —<br>
-    клавиатура, мышь или тач-управление.
+    Четыре игры и школьный дневник — в одной обойме.<br>
+    Выбирай режим и вперёд: клавиатура, мышь или тач.
   </p>
 
   <div class="grid">
@@ -126,10 +128,30 @@
       <div class="playArrow">▶ ИГРАТЬ</div>
     </a>
 
+    <a class="card" id="cardDIARY" href="diary.html">
+      <div class="newBadge purple">NEW</div>
+      <div class="ico">📓</div>
+      <h2>SCHOOL DIARY</h2>
+      <div class="ver">DEMO EDITION · V1</div>
+      <p>Электронный дневник. Расписание, оценки, посещаемость, ДЗ, мессенджер и админ-панель.</p>
+      <div class="meta">
+        <span class="chip">SCHEDULE</span>
+        <span class="chip">GRADES</span>
+        <span class="chip">CHAT</span>
+        <span class="chip">ADMIN</span>
+      </div>
+      <div class="playArrow">▶ ОТКРЫТЬ</div>
+    </a>
+
   </div>
 
   <div class="hotkeys">
-    БЫСТРЫЙ ЗАПУСК: <span class="k">1</span> · <span class="k">2</span> · <span class="k">3</span> · <span class="k">4</span>
+    БЫСТРЫЙ ЗАПУСК:
+    <span class="k">1</span> ·
+    <span class="k">2</span> ·
+    <span class="k">3</span> ·
+    <span class="k">4</span> ·
+    <span class="k">5</span>
   </div>
 
   <footer>
@@ -143,6 +165,7 @@
     if (e.key === '2') location.href = 'game4.html';
     if (e.key === '3') location.href = 'game2.html';
     if (e.key === '4') location.href = 'game3.html';
+    if (e.key === '5') location.href = 'diary.html';
   });
 </script>
 </body>
