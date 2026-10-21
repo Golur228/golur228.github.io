@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Проценты — тренажёр</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;background:#f1f5f9;color:#1f2937;
+    padding:20px 16px;line-height:1.4;
+  }
+  .wrap{width:100%;max-width:560px;margin:0 auto}
+  .card{background:#fff;border-radius:12px;padding:22px;border:1px solid #e2e8f0}
+  .hidden{display:none!important}
+
+  /* --- старт --- */
+  .emoji{font-size:44px;text-align:center;margin-bottom:10px}
+  h1{font-size:22px;line-height:1.3;margin-bottom:10px;text-align:center}
+  .sub{color:#64748b;font-size:14px;text-align:center;line-height:1.55;margin-bottom:22px}
+  .main-btn{
+    width:100%;padding:14px;border:none;border-radius:10px;cursor:pointer;
+    background:#4f46e5;color:#fff;font-size:16px;font-weight:600;
+    font-family:inherit;
+  }
+  .main-btn:active{background:#4338ca}
+  .hint{margin-top:14px;text-align:center;font-size:12px;color:#94a3b8;line-height:1.55}
+  #startScreen{margin-top:24px}
+
+  /* --- викторина --- */
+  .top-row{display:flex;justify-content:space-between;font-size:13px;font-weight:600;
+    color:#64748b;margin-bottom:10px}
+  #scoreText{color:#10b981}
+  .timer-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+  .timer-fill{height:100%;width:100%;background:#10b981}
+  .timer-fill.warn{background:#ef4444}
+  .timer-num{text-align:right;font-size:13px;font-weight:600;color:#64748b;margin:4px 0 0}
+  .timer-num.warn{color:#ef4444}
+
+  .statement{
+    background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;
+    padding:22px 16px;min-height:100px;margin:14px 0;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:22px;font-weight:700;color:#1e293b;word-break:break-word;
+  }
+  .statement.correct{background:#ecfdf5;border-color:#10b981;color:#065f46}
+  .statement.wrong{background:#fef2f2;border-color:#ef4444;color:#991b1b}
+
+  .tf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tf-row button{
+    padding:16px;border:none;border-radius:10px;color:#fff;font-family:inherit;
+    font-size:15px;font-weight:700;letter-spacing:.3px;cursor:pointer;
+  }
+  #btnTrue{background:#10b981}
+  #btnTrue:active{background:#059669}
+  #btnFalse{background:#ef4444}
+  #btnFalse:active{background:#dc2626}
+
+  .input-row{display:flex;gap:10px}
+  .input-row input{
+    flex:1;min-width:0;padding:14px;border:2px solid #cbd5e1;border-radius:10px;
+    font-size:18px;font-weight:600;text-align:center;outline:none;font-family:inherit;
+  }
+  .input-row input:focus{border-color:#4f46e5}
+  .input-row input:disabled{background:#f1f5f9;color:#64748b}
+  .input-row button{
+    padding:14px 18px;border:none;border-radius:10px;background:#4f46e5;color:#fff;
+    font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  }
+  .input-row button:active{background:#4338ca}
+
+  button:disabled{opacity:.45;cursor:default}
+
+  .feedback{margin-top:12px;padding:12px 14px;border-radius:10px;font-size:14px;display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:#ecfdf5;border:1px solid #10b981}
+  .feedback.bad{background:#fef2f2;border:1px solid #ef4444}
+  .feedback.timeout{background:#fffbeb;border:1px solid #f59e0b}
+  .fb-title{font-weight:700;font-size:15px;margin-bottom:4px}
+  .fb-title.ok{color:#047857}
+  .fb-title.bad{color:#b91c1c}
+  .fb-title.timeout{color:#b45309}
+  .fb-expl{color:#374151}
+
+  /* --- результат --- */
+  .result-head{text-align:center;padding:10px 0 6px}
+  .score-big{font-size:46px;font-weight:800;color:#4f46e5;line-height:1.1}
+  .score-pct{font-size:16px;font-weight:600;color:#64748b;margin-top:2px}
+  #finalMsg{margin-top:8px;font-size:15px;color:#475569;font-weight:600}
+  .review{max-height:320px;overflow-y:auto;margin-top:16px;
+    display:flex;flex-direction:column;gap:6px;padding-right:4px}
+  .rev{padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.45}
+  .rev.ok{background:#ecfdf5;border:1px solid #a7f3d0}
+  .rev.bad{background:#fef2f2;border:1px solid #fecaca}
+  .rev-q{font-weight:700;color:#1e293b;margin-bottom:3px}
+  .rev-a{color:#475569}
+  .rev-y{color:#64748b;font-size:12px;margin-top:2px}
+  .review::-webkit-scrollbar{width:6px}
+  .review::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- СТАРТ -->
+  <section id="startScreen" class="card">
+    <div class="emoji">％</div>
+    <h1>Проценты: Верно/Неверно<br>и Ввод числа</h1>
+    <p class="sub">
+      10 случайных вопросов из 100<br>
+      30 секунд на каждый · два типа заданий
+    </p>
+    <button class="main-btn" id="startBtn">Начать тренажёр</button>
+    <p class="hint">
+      Клавиши <b>1</b> / <b>2</b> для Верно/Неверно · <b>Enter</b> для отправки числа<br>
+      Числа можно писать через точку <b>или</b> запятую: <b>0.2</b> = <b>0,2</b>
+    </p>
+  </section>
+
+  <!-- ВИКТОРИНА -->
+  <section id="quizScreen" class="card hidden">
+    <div class="top-row">
+      <span id="progressText">Вопрос 1 из 10</span>
+      <span id="scoreText">Правильно: 0</span>
+    </div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+    <div class="timer-num"><span id="timerText">30</span> сек</div>
+
+    <div class="statement" id="statement">—</div>
+
+    <div id="tfArea" class="tf-row">
+      <button id="btnTrue">ВЕРНО</button>
+      <button id="btnFalse">НЕВЕРНО</button>
+    </div>
+
+    <div id="inputArea" class="input-row hidden">
+      <input type="text" inputmode="decimal" id="numInput"
+             placeholder="? %" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button id="btnSubmit">OK</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </section>
+
+  <!-- РЕЗУЛЬТАТ -->
+  <section id="resultScreen" class="card hidden">
+    <div class="result-head">
+      <div class="score-big" id="finalScore">0 / 10</div>
+      <div class="score-pct" id="finalPct">0%</div>
+      <div id="finalMsg"></div>
+    </div>
+    <div class="review" id="reviewList"></div>
+    <button class="main-btn" id="againBtn" style="margin-top:16px">Пройти ещё раз</button>
+  </section>
+
+</div>
+
+<script>
+/* ========== 50 ВОПРОСОВ ВЕРНО/НЕВЕРНО ========== */
+const RAW_TF = [
+  /* ВЕРНЫЕ (25) */
+  [10, 50, 5],   [20, 80, 16],  [50, 46, 23],  [30, 90, 27],  [15, 200, 30],
+  [5, 300, 15],  [75, 40, 30],  [60, 150, 90], [80, 45, 36],  [35, 80, 28],
+  [45, 60, 27],  [90, 70, 63],  [25, 200, 50], [10, 130, 13], [70, 30, 21],
+  [55, 40, 22],  [5, 80, 4],    [30, 50, 15],  [40, 120, 48], [25, 44, 11],
+  [20, 150, 30], [60, 35, 21],  [35, 20, 7],   [15, 400, 60], [80, 55, 44],
+  /* НЕВЕРНЫЕ (25) */
+  [25, 60, 20],  [40, 25, 12],  [12, 50, 5],   [20, 45, 10],  [15, 60, 12],
+  [75, 80, 65],  [30, 70, 24],  [45, 40, 20],  [10, 70, 8],   [50, 84, 44],
+  [20, 90, 16],  [25, 48, 14],  [5, 120, 8],   [60, 45, 30],  [35, 40, 16],
+  [80, 25, 22],  [15, 80, 10],  [30, 120, 40], [40, 60, 26],  [90, 60, 52],
+  [10, 250, 24], [45, 80, 38],  [20, 35, 8],   [25, 36, 8],   [70, 50, 36]
+];
+
+const TF_QUESTIONS = RAW_TF.map(([p, n, s]) => {
+  const real = p / 100 * n;
+  return { type: 'tf', p, n, shown: s, truth: Math.abs(real - s) < 1e-6 };
+});
+
+/* ========== УТИЛИТЫ ========== */
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Парсинг числа: принимает "0.2", "0,2", "0,2%", "0.2 %" и т.п. */
+function parseNum(str) {
+  if (str === null || str === undefined) return NaN;
+  str = String(str).replace(/%/g, '').replace(/\s/g, '').replace(/,/g, '.');
+  if (str === '') return NaN;
+  const v = Number(str);
+  return isFinite(v) ? v : NaN;
+}
+
+/* Форматирование числа с запятой (для отображения) */
+function fmtNum(v) {
+  const r = Math.round(v * 1000) / 1000;
+  return String(r).replace('.', ',');
+}
+
+/* ========== ГЕНЕРАТОР 50 ВОПРОСОВ "ВВЕДИ ЧИСЛО" ========== */
+function generateInputQuestions(count) {
+  const percents = [
+    1,2,3,4,5,6,8,10,12,15,16,20,24,25,30,32,35,40,45,50,55,60,64,65,70,75,80,85,90,95,100,
+    0.2,0.5,1.5,2.5,6.25,7.5,12.5
+  ];
+  const bases = [
+    20,25,40,50,64,80,100,120,125,150,160,200,240,250,300,320,400,500,600,640,800,1000
+  ];
+
+  const all = [];
+  const seen = new Set();
+  for (const p of percents) {
+    for (const b of bases) {
+      const a = b * p / 100;
+      if (a > 0 && a <= b && Math.abs(a - Math.round(a)) < 1e-9) {
+        const aInt = Math.round(a);
+        const key = aInt + '-' + b;
+        if (!seen.has(key)) {
+          seen.add(key);
+          all.push({ type: 'input', a: aInt, b, answer: p });
+        }
+      }
+    }
+  }
+  return shuffle(all).slice(0, count);
+}
+
+const INPUT_QUESTIONS = generateInputQuestions(50);
+const ALL = [...TF_QUESTIONS, ...INPUT_QUESTIONS];
+const PER_ROUND = 10;
+const TIME_LIMIT = 30;
+
+/* ========== DOM ========== */
+const startScreen  = document.getElementById('startScreen');
+const quizScreen   = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+const statementEl  = document.getElementById('statement');
+const feedbackEl   = document.getElementById('feedback');
+const btnTrue      = document.getElementById('btnTrue');
+const btnFalse     = document.getElementById('btnFalse');
+const tfArea       = document.getElementById('tfArea');
+const inputArea    = document.getElementById('inputArea');
+const numInput     = document.getElementById('numInput');
+const btnSubmit    = document.getElementById('btnSubmit');
+const progressText = document.getElementById('progressText');
+const scoreText    = document.getElementById('scoreText');
+const timerFill    = document.getElementById('timerFill');
+const timerText    = document.getElementById('timerText');
+const timerNumEl   = timerText.parentElement;
+
+/* ========== СОСТОЯНИЕ ========== */
+let round = [];
+let idx = 0;
+let score = 0;
+let locked = false;
+let timerId = null;
+let endTime = 0;
+let timeLeft = TIME_LIMIT;
+let results = [];
+
+/* ========== ИГРА ========== */
+function pickRound() {
+  const tfPart = shuffle(TF_QUESTIONS);
+  const inPart = shuffle(INPUT_QUESTIONS);
+  const tfCount = 4 + Math.floor(Math.random() * 3);   // 4–6
+  const inCount = PER_ROUND - tfCount;
+  return shuffle([...tfPart.slice(0, tfCount), ...inPart.slice(0, inCount)]);
+}
+
+function startGame() {
+  round = pickRound();
+  idx = 0; score = 0; results = [];
+  startScreen.classList.add('hidden');
+  resultScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  showQuestion();
+}
+
+function showQuestion() {
+  locked = false;
+  clearInterval(timerId);
+
+  const q = round[idx];
+  progressText.textContent = 'Вопрос ' + (idx + 1) + ' из ' + round.length;
+  scoreText.textContent = 'Правильно: ' + score;
+
+  statementEl.className = 'statement';
+  feedbackEl.className = 'feedback';
+  feedbackEl.innerHTML = '';
+
+  numInput.value = '';
+  numInput.disabled = false;
+  btnSubmit.disabled = false;
+  btnTrue.disabled = false;
+  btnFalse.disabled = false;
+
+  if (q.type === 'tf') {
+    statementEl.textContent = q.p + '% от ' + q.n + ' равно ' + q.shown;
+    tfArea.classList.remove('hidden');
+    inputArea.classList.add('hidden');
+  } else {
+    statementEl.textContent = q.a + ' от ' + q.b + ' = ?%';
+    tfArea.classList.add('hidden');
+    inputArea.classList.remove('hidden');
+    setTimeout(() => numInput.focus(), 30);
+  }
+
+  startTimer();
+}
+
+/* ---------- Таймер ---------- */
+function startTimer() {
+  timeLeft = TIME_LIMIT;
+  endTime = Date.now() + TIME_LIMIT * 1000;
+  renderTimer();
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    timeLeft = Math.max(0, (endTime - Date.now()) / 1000);
+    renderTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      onTimeout();
+    }
+  }, 100);
+}
+
+function renderTimer() {
+  timerFill.style.width = (timeLeft / TIME_LIMIT * 100) + '%';
+  timerText.textContent = Math.ceil(timeLeft);
+  const warn = timeLeft <= 10;
+  timerFill.classList.toggle('warn', warn);
+  timerNumEl.classList.toggle('warn', warn);
+}
+
+/* ---------- Ответ: Верно/Неверно ---------- */
+function answerTF(userSaysTrue) {
+  if (locked) return;
+  locked = true;
+  clearInterval(timerId);
+  btnTrue.disabled = true;
+  btnFalse.disabled = true;
+
+  const q = round[idx];
+  const ok = (userSaysTrue === q.truth);
+  if (ok) score++;
+  scoreText.textContent = 'Правильно: ' + score;
+
+  results.push({ q, ok, timedOut: false, userAnswer: userSaysTrue ? 'ВЕРНО' : 'НЕВЕРНО' });
+
+  statementEl.classList.add(ok ? 'correct' : 'wrong');
+  showFeedbackTF(ok, q);
+  setTimeout(nextQuestion, 1600);
+}
+
+/* ---------- Ответ: Ввод числа ---------- */
+function answerInput() {
+  if (locked) return;
+  const val = parseNum(numInput.value);
+  if (isNaN(val)) { numInput.focus(); return; }
+
+  locked = true;
+  clearInterval(timerId);
+  numInput.disabled = true;
+  btnSubmit.disabled = true;
+
+  const q = round[idx];
+  const ok = Math.abs(val - q.answer) < 0.001;
+  if (ok) score++;
+  scoreText.textContent = 'Правильно: ' + score;
+
+  results.push({ q, ok, timedOut: false, userAnswer: val });
+
+  statementEl.classList.add(ok ? 'correct' : 'wrong');
+  showFeedbackInput(ok, q, val);
+  setTimeout(nextQuestion, 1600);
+}
+
+/* ---------- Таймаут ---------- */
+function onTimeout() {
+  if (locked) return;
+  locked = true;
+  btnTrue.disabled = true;
+  btnFalse.disabled = true;
+  numInput.disabled = true;
+  btnSubmit.disabled = true;
+
+  const q = round[idx];
+  results.push({ q, ok: false, timedOut: true });
+  statementEl.classList.add('wrong');
+  showFeedbackTimeout(q);
+  setTimeout(nextQuestion, 2000);
+}
+
+/* ---------- Обратная связь ---------- */
+function showFeedbackTF(ok, q) {
+  const real = q.p / 100 * q.n;
+  let html = '<div class="fb-title ' + (ok ? 'ok' : 'bad') + '">'
+           + (ok ? '✅ Правильно!' : '❌ Ошибка') + '</div>';
+  let expl = q.p + '% от ' + q.n + ' = ' + fmtNum(real);
+  if (!q.truth) expl += ', а не ' + q.shown;
+  html += '<div class="fb-expl">' + expl + '</div>';
+  feedbackEl.innerHTML = html;
+  feedbackEl.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+}
+
+function showFeedbackInput(ok, q, val) {
+  let html = '<div class="fb-title ' + (ok ? 'ok' : 'bad') + '">'
+           + (ok ? '✅ Правильно!' : '❌ Ошибка') + '</div>';
+  let expl = q.a + ' от ' + q.b + ' = ' + fmtNum(q.answer) + '%';
+  if (!ok) expl += ' (вы ввели ' + fmtNum(val) + '%)';
+  html += '<div class="fb-expl">' + expl + '</div>';
+  feedbackEl.innerHTML = html;
+  feedbackEl.className = 'feedback show ' + (ok ? 'ok' : 'bad');
+}
+
+function showFeedbackTimeout(q) {
+  let html = '<div class="fb-title timeout">⏰ Время вышло!</div>';
+  if (q.type === 'tf') {
+    const real = q.p / 100 * q.n;
+    let expl = q.p + '% от ' + q.n + ' = ' + fmtNum(real);
+    if (!q.truth) expl += ', а не ' + q.shown;
+    html += '<div class="fb-expl">' + expl + '</div>';
+  } else {
+    html += '<div class="fb-expl">' + q.a + ' от ' + q.b + ' = ' + fmtNum(q.answer) + '%</div>';
+  }
+  feedbackEl.innerHTML = html;
+  feedbackEl.className = 'feedback show timeout';
+}
+
+/* ---------- Переход ---------- */
+function nextQuestion() {
+  idx++;
+  if (idx >= round.length) { finish(); return; }
+  showQuestion();
+}
+
+/* ---------- Итоги ---------- */
+function finish() {
+  clearInterval(timerId);
+  quizScreen.classList.add('hidden');
+  resultScreen.classList.remove('hidden');
+
+  const total = round.length;
+  const pct = Math.round(score / total * 100);
+
+  document.getElementById('finalScore').textContent = score + ' / ' + total;
+  document.getElementById('finalPct').textContent = pct + '%';
+
+  let msg;
+  if (pct === 100)      msg = 'Идеально! Ты мастер процентов 🏆';
+  else if (pct >= 80)   msg = 'Отличный результат! 👍';
+  else if (pct >= 60)   msg = 'Неплохо, но есть над чем поработать 💪';
+  else                  msg = 'Стоит потренироваться ещё 📚';
+  document.getElementById('finalMsg').textContent = msg;
+
+  document.getElementById('reviewList').innerHTML = results.map(r => {
+    const q = r.q;
+    const icon = r.ok ? '✅' : '❌';
+    let qText, correctLine, your;
+
+    if (q.type === 'tf') {
+      qText = q.p + '% от ' + q.n + ' равно ' + q.shown;
+      const real = q.p / 100 * q.n;
+      correctLine = 'Правильно: <b>' + (q.truth ? 'ВЕРНО' : 'НЕВЕРНО') + '</b> — '
+                  + q.p + '% от ' + q.n + ' = ' + fmtNum(real)
+                  + (q.truth ? '' : ', а не ' + q.shown);
+      your = r.timedOut ? '⏰ время вышло' : r.userAnswer;
+    } else {
+      qText = q.a + ' от ' + q.b + ' = ?%';
+      correctLine = 'Правильно: <b>' + fmtNum(q.answer) + '%</b>';
+      your = r.timedOut ? '⏰ время вышло'
+           : (r.userAnswer !== undefined ? fmtNum(r.userAnswer) + '%' : '—');
+    }
+
+    return '<div class="rev ' + (r.ok ? 'ok' : 'bad') + '">'
+         + '<div class="rev-q">' + icon + ' ' + qText + '</div>'
+         + '<div class="rev-a">' + correctLine + '</div>'
+         + '<div class="rev-y">Твой ответ: ' + your + '</div>'
+         + '</div>';
+  }).join('');
+}
+
+/* ========== СОБЫТИЯ ========== */
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('againBtn').addEventListener('click', startGame);
+btnTrue.addEventListener('click', () => answerTF(true));
+btnFalse.addEventListener('click', () => answerTF(false));
+btnSubmit.addEventListener('click', answerInput);
+
+numInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); answerInput(); }
+});
+
+document.addEventListener('keydown', e => {
+  if (quizScreen.classList.contains('hidden') || locked) return;
+  const q = round[idx];
+  if (!q || q.type !== 'tf') return;
+  if (e.key === '1') answerTF(true);
+  if (e.key === '2') answerTF(false);
+});
+</script>
+</body>
+</html>
