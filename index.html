@@ -1,171 +1,258 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0a0e14">
-<title>PIXEL ARCADE — SELECT GAME</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f8fafc">
+<title>Тренажёры по математике</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{width:100%;min-height:100%;background:#0a0e14;font-family:'Courier New','Consolas','Monaco',monospace;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;color:#e8eef7;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
-  body{display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px;
-    background-image:linear-gradient(rgba(30,60,100,.06) 1px, transparent 1px),linear-gradient(90deg, rgba(30,60,100,.06) 1px, transparent 1px);
-    background-size:16px 16px, 16px 16px;position:relative;min-height:100vh;min-height:100dvh;}
-  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:200;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.10) 0 1px,transparent 1px 3px);mix-blend-mode:multiply;}
-  h1{font-size:clamp(22px,6vw,38px);letter-spacing:clamp(3px,1.5vw,8px);color:#ffd166;text-shadow:3px 3px 0 #7a4a10, 6px 6px 0 #000;padding:6px 0;text-align:center;margin-top:8px;}
-  .tag{display:inline-block;padding:4px 14px;border:2px solid #ffd166;color:#ffd166;font-size:10px;letter-spacing:4px;text-shadow:1px 1px 0 #000;
-    clip-path:polygon(3px 0,calc(100% - 3px) 0,100% 3px,100% calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,0 calc(100% - 3px),0 3px);margin-top:8px;}
-  .sub{font-size:10px;line-height:1.7;color:#8fa9c9;max-width:460px;text-align:center;letter-spacing:1px;margin-top:14px;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1020px;width:100%;margin-top:28px;}
-  .card{position:relative;display:flex;flex-direction:column;text-decoration:none;color:#e8eef7;background:#0d141d;border:3px solid #2a3f5c;padding:18px 16px 20px;
-    box-shadow:0 6px 0 #05080d, inset 0 0 0 1px #0a1018;
-    clip-path:polygon(6px 0, calc(100% - 6px) 0, 100% 6px,100% calc(100% - 6px), calc(100% - 6px) 100%,6px 100%, 0 calc(100% - 6px), 0 6px);
-    transition:transform .08s ease, box-shadow .08s ease, border-color .15s ease;overflow:hidden;cursor:pointer;}
-  .card::after{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7;}
-  .card:hover{transform:translate(0,-4px);box-shadow:0 10px 0 #05080d, inset 0 0 0 1px #0a1018;border-color:var(--accent);}
-  .card:active{transform:translate(0,2px);box-shadow:0 2px 0 #05080d, inset 0 0 0 1px #0a1018;}
-  .card .ico{font-size:48px;line-height:1;margin-bottom:10px;filter:drop-shadow(2px 2px 0 #000);}
-  .card h2{font-size:20px;letter-spacing:4px;color:var(--accent);text-shadow:2px 2px 0 #000;margin-bottom:4px;}
-  .card .ver{font-size:8px;letter-spacing:3px;color:#5c8bc8;margin-bottom:10px;}
-  .card p{font-size:10px;line-height:1.7;color:#8fa9c9;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;flex-grow:1;}
-  .card .meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;}
-  .card .chip{font-size:8px;letter-spacing:1px;padding:3px 7px;border:1px solid #2a3f5c;background:#131c28;color:#cfe4ff;
-    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);}
-  .card .playArrow{margin-top:14px;align-self:flex-start;display:inline-block;font-size:10px;letter-spacing:3px;padding:8px 16px;background:var(--accent);color:#241a05;border:2px solid rgba(0,0,0,.5);
-    clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px);
-    box-shadow:0 3px 0 rgba(0,0,0,.6);text-shadow:none;}
-  #cardCS{ --accent:#ffd166; }
-  #cardMP{ --accent:#5adc7a; }
-  #cardNFS{ --accent:#8fe4ff; }
-  #cardPIZZA{ --accent:#ff6b3d; }
-  #cardDIARY{ --accent:#a855f7; }
-  #cardDIARY h2{ color:#a855f7; }
-  .newBadge{position:absolute;right:10px;top:10px;font-size:8px;letter-spacing:2px;padding:3px 8px;background:#5adc7a;color:#0a0e14;
-    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);
-    box-shadow:0 2px 0 #05080d;font-weight:900;}
-  .newBadge.purple{background:#a855f7;}
-  footer{margin-top:32px;font-size:9px;letter-spacing:2px;color:#5c8bc8;text-align:center;line-height:1.8;}
-  footer b{ color:#8fa9c9; }
-  .blink{ animation:blink 1.4s steps(2,end) infinite; }
-  @keyframes blink{ 50%{opacity:.35;} }
-  .hotkeys{margin-top:16px;font-size:9px;letter-spacing:2px;color:#5c8bc8;text-align:center;}
-  .hotkeys .k{display:inline-block;padding:2px 8px;margin:0 3px;background:#131c28;border:2px solid #2a3f5c;color:#cfe4ff;box-shadow:0 2px 0 #05080d;
-    clip-path:polygon(2px 0,calc(100% - 2px) 0,100% 2px,100% calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,0 calc(100% - 2px),0 2px);}
-  @media (max-width:520px){
-    h1{ letter-spacing:4px; }
-    .card{ padding:14px 12px 16px; }
-    .card .ico{ font-size:38px; }
-    .card h2{ font-size:17px; letter-spacing:3px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh; min-height: 100dvh;
+    background: #f8fafc; color: #1e293b;
+    display: flex; flex-direction: column;
+    overflow-x: hidden;
   }
+
+  /* ====== ОБЩИЙ КОНТЕЙНЕР ====== */
+  #trainers, #games {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 24px 16px 20px;
+    max-width: 720px; width: 100%; margin: 0 auto;
+  }
+  #games { display: none; }
+  body.mode-games #trainers { display: none; }
+  body.mode-games #games { display: flex; }
+
+  /* ====== ШАПКА ====== */
+  .header {
+    text-align: center; padding: 20px 8px 8px;
+  }
+  .header h1 {
+    font-size: 24px; font-weight: 700; color: #1e293b;
+    letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 14px; color: #64748b; line-height: 1.5;
+  }
+
+  .badge {
+    display: inline-block; padding: 4px 10px;
+    background: #f1f5f9; color: #64748b;
+    border-radius: 6px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* ====== КАРТОЧКИ ====== */
+  .cards {
+    display: flex; flex-direction: column; gap: 12px;
+    margin-top: 24px;
+  }
+
+  .card {
+    display: flex; align-items: center; gap: 14px;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 14px; padding: 16px;
+    text-decoration: none; color: inherit;
+    transition: all 0.15s; cursor: pointer;
+    position: relative;
+  }
+  .card:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+  .card:active { transform: translateY(0); }
+
+  .card-icon {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700;
+    background: #f1f5f9; color: #4f46e5;
+    font-family: inherit;
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+  .card h2 {
+    font-size: 16px; font-weight: 700; color: #1e293b;
+    margin-bottom: 3px; letter-spacing: -0.01em;
+  }
+  .card p {
+    font-size: 13px; color: #64748b; line-height: 1.45;
+  }
+
+  .card-arrow {
+    color: #94a3b8; font-size: 18px; flex-shrink: 0;
+    transition: transform 0.15s, color 0.15s;
+  }
+  .card:hover .card-arrow { transform: translateX(3px); color: #4f46e5; }
+
+  /* акценты тренажёров */
+  .t-percent .card-icon { background: #eef2ff; color: #4f46e5; }
+  .t-mod     .card-icon { background: #f5f3ff; color: #8b5cf6; }
+  .t-trap    .card-icon { background: #ecfdf5; color: #10b981; }
+
+  /* акценты игр */
+  .g-cs    .card-icon { background: #fef2f2; color: #ef4444; font-size: 22px; }
+  .g-mp    .card-icon { background: #ecfdf5; color: #10b981; font-size: 22px; }
+  .g-racer .card-icon { background: #eff6ff; color: #3b82f6; font-size: 22px; }
+  .g-pizza .card-icon { background: #fff7ed; color: #f97316; font-size: 22px; }
+
+  .game-new {
+    position: absolute; top: 10px; right: 12px;
+    padding: 2px 8px; background: #10b981; color: #fff;
+    border-radius: 4px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* ====== ПОДВАЛ ====== */
+  .footer {
+    margin-top: auto; padding-top: 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .footer-note { font-size: 12px; color: #94a3b8; }
+
+  .secret-btn {
+    padding: 8px 16px; background: transparent;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    font-size: 12px; color: #94a3b8; cursor: pointer;
+    font-family: inherit; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .secret-btn:hover {
+    color: #475569; border-color: #cbd5e1; background: #fff;
+  }
+
+  /* кнопка «назад» на экране игр */
+  .back-btn {
+    margin: 20px auto 0;
+    display: block;
+    padding: 10px 20px; background: #fff;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: #475569;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .back-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
 </style>
 </head>
 <body>
 
-  <h1>PIXEL ARCADE</h1>
-  <div class="tag">SELECT GAME</div>
-  <p class="sub">
-    Четыре игры и школьный дневник — в одной обойме.<br>
-    Выбирай режим и вперёд: клавиатура, мышь или тач.
-  </p>
-
-  <div class="grid">
-
-    <a class="card" id="cardCS" href="game1.html">
-      <div class="ico">🔫</div>
-      <h2>CS2 RAYCAST</h2>
-      <div class="ver">PIXEL EDITION · V5</div>
-      <p>Рейкаст-шутер от первого лица. Волны врагов, 7 стволов, союзники, автоприцел.</p>
-      <div class="meta">
-        <span class="chip">FPS</span>
-        <span class="chip">RAYCAST</span>
-        <span class="chip">7 WEAPONS</span>
-        <span class="chip">BOTS</span>
-      </div>
-      <div class="playArrow">▶ ИГРАТЬ</div>
-    </a>
-
-    <a class="card" id="cardMP" href="game4.html">
-      <div class="newBadge">NEW</div>
-      <div class="ico">🌐</div>
-      <h2>MULTIPLAYER</h2>
-      <div class="ver">CO-OP · EXPERIMENT</div>
-      <p>Кооператив против ботов до 4 игроков. Создай комнату, скинь код друзьям — и в бой.</p>
-      <div class="meta">
-        <span class="chip">4 PLAYERS</span>
-        <span class="chip">P2P</span>
-        <span class="chip">ROOM CODE</span>
-        <span class="chip">CO-OP</span>
-      </div>
-      <div class="playArrow">▶ ИГРАТЬ</div>
-    </a>
-
-    <a class="card" id="cardNFS" href="game2.html">
-      <div class="ico">🏎️</div>
-      <h2>PIXEL RACER</h2>
-      <div class="ver">SKINS EDITION · V6</div>
-      <p>Псевдо-3D гонки. Круги, нитро, 6 скинов, 4 схемы управления и умные соперники.</p>
-      <div class="meta">
-        <span class="chip">RACING</span>
-        <span class="chip">6 SKINS</span>
-        <span class="chip">4 CTRL</span>
-        <span class="chip">GYRO</span>
-      </div>
-      <div class="playArrow">▶ ИГРАТЬ</div>
-    </a>
-
-    <a class="card" id="cardPIZZA" href="game3.html">
-      <div class="ico">🍕</div>
-      <h2>PIXEL PIZZA</h2>
-      <div class="ver">PIZZERIA EDITION · V1</div>
-      <p>Пиксельная пиццерия. Собирай заказы, нарезай ингредиенты и развози клиентам до закрытия.</p>
-      <div class="meta">
-        <span class="chip">PIZZA</span>
-        <span class="chip">ARCADE</span>
-        <span class="chip">TIME</span>
-        <span class="chip">COMBO</span>
-      </div>
-      <div class="playArrow">▶ ИГРАТЬ</div>
-    </a>
-
-    <a class="card" id="cardDIARY" href="diary.html">
-      <div class="newBadge purple">NEW</div>
-      <div class="ico">📓</div>
-      <h2>SCHOOL DIARY</h2>
-      <div class="ver">DEMO EDITION · V1</div>
-      <p>Электронный дневник. Расписание, оценки, посещаемость, ДЗ, мессенджер и админ-панель.</p>
-      <div class="meta">
-        <span class="chip">SCHEDULE</span>
-        <span class="chip">GRADES</span>
-        <span class="chip">CHAT</span>
-        <span class="chip">ADMIN</span>
-      </div>
-      <div class="playArrow">▶ ОТКРЫТЬ</div>
-    </a>
-
+<!-- ============ ЭКРАН 1: ТРЕНАЖЁРЫ ============ -->
+<section id="trainers">
+  <div class="header">
+    <h1>Тренажёры по математике</h1>
+    <p>Три коротких тренажёра: проценты, модули и трапеции.<br>Задачи генерируются бесконечно.</p>
   </div>
 
-  <div class="hotkeys">
-    БЫСТРЫЙ ЗАПУСК:
-    <span class="k">1</span> ·
-    <span class="k">2</span> ·
-    <span class="k">3</span> ·
-    <span class="k">4</span> ·
-    <span class="k">5</span>
+  <div class="cards">
+    <a class="card t-percent" href="pro.html">
+      <div class="card-icon">%</div>
+      <div class="card-body">
+        <h2>Проценты</h2>
+        <p>Процент от числа, число по проценту, процентное отношение</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="card t-mod" href="mod2.html">
+      <div class="card-icon">|x|</div>
+      <div class="card-body">
+        <h2>Модули</h2>
+        <p>Уравнения с модулем и вычисления</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="card t-trap" href="trump2.html">
+      <div class="card-icon">📐</div>
+      <div class="card-body">
+        <h2>Трапеции</h2>
+        <p>Площадь, средняя линия, высота и основания</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
   </div>
 
-  <footer>
-    <b>GOLUR228</b> · PIXEL ARCADE<br>
-    <span class="blink">▮</span> ВЫБЕРИ ИГРУ ВЫШЕ <span class="blink">▮</span>
-  </footer>
+  <div class="footer">
+    <div class="footer-note">Тренажёры · математика</div>
+    <button class="secret-btn" id="secretBtn" type="button">другое</button>
+  </div>
+</section>
+
+<!-- ============ ЭКРАН 2: ИГРЫ ============ -->
+<section id="games">
+  <div class="header">
+    <div class="badge">Arcade</div>
+    <h1>Pixel Arcade</h1>
+    <p>Четыре игры в одной обойме. Выбирай режим.</p>
+  </div>
+
+  <div class="cards">
+    <a class="card g-cs" href="game1.html">
+      <div class="card-icon">🔫</div>
+      <div class="card-body">
+        <h2>CS2 Raycast</h2>
+        <p>Рейкаст-шутер от первого лица, 7 стволов, союзники</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="card g-mp" href="game4.html">
+      <div class="game-new">NEW</div>
+      <div class="card-icon">🌐</div>
+      <div class="card-body">
+        <h2>Multiplayer</h2>
+        <p>Кооператив против ботов до 4 игроков</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="card g-racer" href="game2.html">
+      <div class="card-icon">🏎️</div>
+      <div class="card-body">
+        <h2>Pixel Racer</h2>
+        <p>Псевдо-3D гонки: круги, нитро, 6 скинов</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="card g-pizza" href="game3.html">
+      <div class="card-icon">🍕</div>
+      <div class="card-body">
+        <h2>Pixel Pizza</h2>
+        <p>Пиксельная пиццерия: заказы, нарезка, доставка</p>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+  </div>
+
+  <button class="back-btn" id="backBtn" type="button">← Назад к тренажёрам</button>
+</section>
 
 <script>
+  const body = document.body;
+
+  document.getElementById('secretBtn').addEventListener('click', () => {
+    body.classList.add('mode-games');
+    window.scrollTo(0, 0);
+  });
+  document.getElementById('backBtn').addEventListener('click', () => {
+    body.classList.remove('mode-games');
+    window.scrollTo(0, 0);
+  });
+
+  /* хоткеи работают только на экране игр */
   window.addEventListener('keydown', e => {
+    if (!body.classList.contains('mode-games')) return;
     if (e.key === '1') location.href = 'game1.html';
     if (e.key === '2') location.href = 'game4.html';
     if (e.key === '3') location.href = 'game2.html';
     if (e.key === '4') location.href = 'game3.html';
-    if (e.key === '5') location.href = 'diary.html';
   });
 </script>
 </body>
