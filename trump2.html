@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Трапеция: Тренажёр</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column;
+    background: #f8fafc; color: #1e293b;
+    overflow-y: auto; overflow-x: hidden;
+  }
+
+  /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
+  .top-panel {
+    padding: 12px 16px; background: #fff; border-bottom: 1px solid #e2e8f0;
+    display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
+  }
+  .header-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; color: #64748b; }
+  
+  .finish-btn {
+    background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569;
+    padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+  }
+  .finish-btn:active { background: #e2e8f0; }
+
+  .question-text {
+    font-size: 16px; font-weight: 700; text-align: center;
+    color: #1e293b; line-height: 1.4;
+  }
+  
+  /* --- БЛОК РИСУНКА --- */
+  .graphic-container {
+    display: flex; justify-content: center; align-items: center;
+    min-height: 120px; margin: 5px 0; padding: 0 10px;
+  }
+  .graphic-container svg {
+    max-height: 140px; width: 100%; max-width: 320px;
+  }
+
+  .input-row { display: flex; gap: 8px; margin-top: 5px; }
+  .input-row input {
+    flex: 1; padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px;
+    font-size: 18px; font-weight: 700; text-align: center; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+  }
+  .input-row input:focus { border-color: #4f46e5; }
+  .input-row button {
+    padding: 0 20px; background: #4f46e5; color: #fff; border: none;
+    border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s; font-family: inherit;
+  }
+  .input-row button:active { background: #4338ca; }
+  .input-row button:disabled { opacity: 0.5; cursor: default; }
+
+  /* --- ПОЛОСА РАЗДЕЛИТЕЛЬ --- */
+  .resizer {
+    height: 20px; background: #f8fafc; display: flex; align-items: center; justify-content: center;
+    cursor: ns-resize; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
+    touch-action: none; user-select: none; flex-shrink: 0; z-index: 5;
+  }
+  .resizer-handle { width: 50px; height: 6px; background: #cbd5e1; border-radius: 3px; }
+
+  /* --- ДОСКА --- */
+  .canvas-container {
+    height: 40dvh; min-height: 200px; flex-shrink: 0;
+    position: relative; background-color: #fff;
+    background-image:
+      linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+      linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+    background-size: 24px 24px; background-position: -1px -1px;
+    touch-action: none; overflow: hidden;
+  }
+  canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; display: block; }
+
+  /* --- ПАНЕЛЬ ИНСТРУМЕНТОВ --- */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+    background: #fff; border-top: 1px solid #e2e8f0; flex-shrink: 0; overflow-x: auto;
+  }
+  .tool-btn {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 12px; background: #f1f5f9; border: 1px solid #cbd5e1;
+    border-radius: 8px; font-size: 13px; font-weight: 600; color: #475569;
+    cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: inherit;
+  }
+  .tool-btn:active { background: #e2e8f0; }
+  .tool-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+  .tool-btn.danger { color: #ef4444; border-color: #fca5a5; background: #fef2f2; }
+  
+  .slider-wrapper { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 13px; font-weight: 600; color: #64748b; padding-left: 8px; }
+  input[type=range] { width: 80px; accent-color: #4f46e5; }
+
+  /* --- ФИДБЕК --- */
+  .feedback {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 20px;
+    font-weight: 600; font-size: 15px; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+    white-space: nowrap; z-index: 10;
+  }
+  .feedback.show { opacity: 1; }
+  .feedback.ok { background: #10b981; }
+  .feedback.bad { background: #ef4444; }
+
+  /* --- МОДАЛКИ --- */
+  .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-content { background: #fff; border-radius: 16px; padding: 24px; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; }
+  .modal h1 { font-size: 22px; margin-bottom: 12px; color: #1e293b; text-align: center; }
+  .modal p { color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.5; text-align: center; }
+  .modal button.main-btn {
+    width: 100%; padding: 14px; background: #4f46e5; color: #fff;
+    border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: background 0.2s; font-family: inherit;
+    margin-top: 10px; flex-shrink: 0;
+  }
+  .hidden { display: none !important; }
+
+  /* --- РЕЗУЛЬТАТЫ --- */
+  .results-list { flex: 1; overflow-y: auto; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+  .result-item { padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 14px; }
+  .result-item.ok { border-left: 4px solid #10b981; }
+  .result-item.bad { border-left: 4px solid #ef4444; }
+  .res-q { font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+  .res-info { display: flex; justify-content: space-between; color: #64748b; font-size: 13px; }
+  .res-time { font-weight: 600; color: #4f46e5; }
+</style>
+</head>
+<body>
+
+  <div id="startModal" class="modal">
+    <div class="modal-content">
+      <h1>📐 Трапеция</h1>
+      <p>Средняя линия, площадь, углы и построение.<br>
+      Каждый раз новые числа и условия.<br><br>
+      <b>💡 Совет:</b> Для задач на построение используйте доску ниже.</p>
+      <button id="startBtn" class="main-btn">Начать</button>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal hidden">
+    <div class="modal-content">
+      <h1>Итоги сессии</h1>
+      <p id="resultSummary" style="margin-bottom: 10px;"></p>
+      <div class="results-list" id="resultsList"></div>
+      <button id="restartBtn" class="main-btn">Начать заново</button>
+    </div>
+  </div>
+
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+  <div class="top-panel">
+    <div class="header-row">
+      <span>Задача: <span id="qCount">1</span></span>
+      <button id="finishBtn" class="finish-btn">Завершить</button>
+    </div>
+    
+    <div id="graphicContainer" class="graphic-container"></div>
+    
+    <div class="question-text" id="questionText">Загрузка...</div>
+    
+    <div class="input-row">
+      <input type="text" inputmode="text" id="answerInput" placeholder="Ответ" autocomplete="off">
+      <button id="submitBtn">OK</button>
+    </div>
+  </div>
+
+  <!-- РАЗДЕЛИТЕЛЬ -->
+  <div class="resizer" id="resizer">
+    <div class="resizer-handle"></div>
+  </div>
+
+  <!-- ДОСКА -->
+  <div class="canvas-container" id="canvasWrapper">
+    <canvas id="drawingCanvas"></canvas>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- ПАНЕЛЬ ИНСТРУМЕНТОВ -->
+  <div class="toolbar">
+    <button class="tool-btn" id="undoBtn">↩ Назад</button>
+    <button class="tool-btn" id="eraserBtn">🧽 Ластик</button>
+    <button class="tool-btn danger" id="clearBtn">🗑 Очистить</button>
+    <div class="slider-wrapper">
+      <span>Толщина:</span>
+      <input type="range" id="sizeSlider" min="1" max="12" value="3">
+    </div>
+  </div>
+
+<script>
+/* ================== ГЕНЕРАТОР ЗАДАЧ ================== */
+function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function getRandomEven(min, max) { return getRandomInt(Math.ceil(min/2), Math.floor(max/2)) * 2; }
+
+// Отрисовка SVG трапеции
+function getTrapezoidSVG(a, b, h, isIsosceles, labels) {
+  const maxW = Math.max(a, b);
+  const scale = 160 / maxW;
+  const W = 260, H = 140;
+  
+  const wA = a * scale;
+  const wB = b * scale;
+  const wH = h * scale;
+  
+  const yBot = H - 20;
+  const yTop = yBot - wH;
+  
+  let x1, x2, x3, x4;
+  if (isIsosceles) {
+    x1 = (W - wA) / 2;
+    x2 = x1 + wA;
+    x3 = (W - wB) / 2;
+    x4 = x3 + wB;
+  } else {
+    x1 = (W - maxW) / 2;
+    x2 = x1 + wA;
+    x3 = x1;
+    x4 = x1 + wB;
+  }
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  
+  // Сама трапеция
+  svg += `<polygon points="${x1},${yBot} ${x2},${yBot} ${x4},${yTop} ${x3},${yTop}" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>`;
+  
+  // Высота (пунктиром)
+  if (labels.h) {
+    svg += `<line x1="${x3}" y1="${yTop}" x2="${x3}" y2="${yBot}" stroke="#94a3b8" stroke-dasharray="4"/>`;
+    svg += `<text x="${x3 - 10}" y="${yTop + wH/2}" font-size="14" fill="#64748b" text-anchor="end">${labels.h}</text>`;
+  }
+  
+  // Средняя линия
+  if (labels.m) {
+    const xM1 = (x1 + x3) / 2;
+    const xM2 = (x2 + x4) / 2;
+    const yM = (yBot + yTop) / 2;
+    
+    // Синяя линия
+    svg += `<line x1="${xM1}" y1="${yM}" x2="${xM2}" y2="${yM}" stroke="#3b82f6" stroke-width="2.5" />`;
+    
+    // Засечки на середине боковых сторон (чтобы показать, что это середины)
+    svg += `<circle cx="${xM1}" cy="${yM}" r="3" fill="#3b82f6" />`;
+    svg += `<circle cx="${xM2}" cy="${yM}" r="3" fill="#3b82f6" />`;
+    
+    // Подпись средней линии
+    svg += `<text x="${(xM1 + xM2) / 2}" y="${yM - 8}" font-size="14" fill="#3b82f6" text-anchor="middle" font-weight="bold">${labels.m}</text>`;
+  }
+  
+  // Подписи оснований
+  if (labels.a) svg += `<text x="${x1 + wA/2}" y="${yBot + 18}" font-size="14" fill="#1e293b" text-anchor="middle" font-weight="bold">${labels.a}</text>`;
+  if (labels.b) svg += `<text x="${x3 + wB/2}" y="${yTop - 8}" font-size="14" fill="#1e293b" text-anchor="middle" font-weight="bold">${labels.b}</text>`;
+  
+  // Углы
+  if (labels.alpha) svg += `<text x="${x1 + 15}" y="${yBot - 5}" font-size="12" fill="#ef4444" font-weight="bold">α</text>`;
+  if (labels.beta) svg += `<text x="${x2 - 15}" y="${yBot - 5}" font-size="12" fill="#ef4444" font-weight="bold">β</text>`;
+  
+  svg += `</svg>`;
+  return svg;
+}
+
+function generateQuestion() {
+  const isDrawing = Math.random() < 0.5;
+  
+  if (isDrawing) {
+    const type = getRandomInt(1, 5);
+    let a, b, h, m, S;
+    let text, answer, svg;
+    
+    a = getRandomEven(10, 30);
+    b = getRandomEven(4, a - 2); 
+    h = getRandomInt(3, 12);
+    
+    if (type === 1) {
+      m = (a + b) / 2;
+      text = `На рисунке изображена трапеция. Найдите её среднюю линию (m).`;
+      answer = m;
+      // Показываем линию, но со знаком вопроса
+      svg = getTrapezoidSVG(a, b, h, true, {a: a, b: b, m: 'm = ?'});
+    } 
+    else if (type === 2) {
+      m = (a + b) / 2;
+      text = `Средняя линия трапеции равна ${m}, а меньшее основание — ${b}. Найдите большее основание.`;
+      answer = a;
+      // Показываем линию и её значение
+      svg = getTrapezoidSVG(a, b, h, true, {b: b, m: `m = ${m}`});
+    }
+    else if (type === 3) {
+      S = ((a + b) / 2) * h;
+      text = `Найдите площадь трапеции, если её основания равны ${a} и ${b}, а высота — ${h}.`;
+      answer = S;
+      // Рисуем высоту и среднюю линию
+      svg = getTrapezoidSVG(a, b, h, true, {a: a, b: b, h: 'h', m: 'm'});
+    }
+    else if (type === 4) {
+      S = ((a + b) / 2) * h;
+      text = `Площадь трапеции равна ${S}, а средняя линия — ${(a+b)/2}. Найдите высоту трапеции.`;
+      answer = h;
+      // Средняя линия с числом, высота - вопрос
+      svg = getTrapezoidSVG(a, b, h, true, {a: a, b: b, h: 'h = ?', m: `m = ${(a+b)/2}`});
+    }
+    else if (type === 5) {
+      const alpha = getRandomInt(30, 70);
+      const beta = 180 - alpha;
+      text = `В равнобедренной трапеции один из углов при основании равен ${alpha}°. Найдите больший угол трапеции.`;
+      answer = beta;
+      svg = getTrapezoidSVG(a, b, h, true, {a: 'a', b: 'b', alpha: true});
+    }
+    return { text, answer, svg };
+  } 
+  else {
+    const type = getRandomInt(6, 10);
+    let text, answer, svg;
+    
+    if (type === 6) {
+      const alpha = getRandomInt(20, 80);
+      text = `Постройте трапецию. Угол при большем основании равен ${alpha}°. Найдите тупой угол, прилежащий к той же боковой стороне.`;
+      answer = 180 - alpha;
+      svg = `<div style="color:#94a3b8; font-size: 14px; text-align:center;">Нарисуйте трапецию на доске ниже, чтобы проверить себя.</div>`;
+    }
+    else if (type === 7) {
+      const alpha = getRandomInt(40, 80);
+      const beta = 180 - alpha;
+      text = `Постройте равнобедренную трапецию с острым углом ${alpha}°. Чему равен её тупой угол?`;
+      answer = beta;
+      svg = `<div style="color:#94a3b8; font-size: 14px; text-align:center;">Используйте клетчатую доску для построения.</div>`;
+    }
+    else if (type === 8) {
+      const part = getRandomInt(2, 5);
+      const alpha = 30 * part;
+      const beta = 180 - alpha;
+      text = `В равнобедренной трапеции острый угол в ${part} раза меньше тупого. Найдите тупой угол.`;
+      answer = beta;
+      svg = "";
+    }
+    else if (type === 9) {
+      const alpha = getRandomInt(30, 70);
+      text = `Постройте прямоугольную трапецию, у которой один из углов равен ${alpha}°. Найдите неизвестный острый угол.`;
+      answer = 180 - 90 - alpha; 
+      svg = "";
+    }
+    else {
+      const k = getRandomInt(2, 4);
+      const a = getRandomEven(10, 30);
+      const b = a * k;
+      const m = (a + b) / 2;
+      text = `Основания трапеции относятся как 1:${k}. Средняя линия равна ${m}. Найдите большее основание.`;
+      answer = b;
+      // Рисуем нормальную трапецию с подписанной средней линией
+      svg = getTrapezoidSVG(b, a, 8, true, {m: `m = ${m}`});
+    }
+    
+    return { text, answer, svg };
+  }
+}
+
+/* ================== DOM ================== */
+const startModal = document.getElementById('startModal');
+const resultModal = document.getElementById('resultModal');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+const finishBtn = document.getElementById('finishBtn');
+const questionText = document.getElementById('questionText');
+const graphicContainer = document.getElementById('graphicContainer');
+const answerInput = document.getElementById('answerInput');
+const submitBtn = document.getElementById('submitBtn');
+const qCountEl = document.getElementById('qCount');
+const feedbackEl = document.getElementById('feedback');
+const resultsList = document.getElementById('resultsList');
+const resultSummary = document.getElementById('resultSummary');
+const canvasWrapper = document.getElementById('canvasWrapper');
+const resizer = document.getElementById('resizer');
+const canvas = document.getElementById('drawingCanvas');
+const ctx = canvas.getContext('2d');
+const undoBtn = document.getElementById('undoBtn');
+const eraserBtn = document.getElementById('eraserBtn');
+const clearBtn = document.getElementById('clearBtn');
+const sizeSlider = document.getElementById('sizeSlider');
+
+/* ================== СОСТОЯНИЕ ================== */
+let currentQ = null;
+let qIndex = 1;
+let qStartTime = 0;
+let sessionHistory = [];
+let isDrawing = false;
+let isEraser = false;
+let undoStack = [];
+let lastX = 0, lastY = 0;
+
+/* ================== ПАРСЕР ЧИСЕЛ ================== */
+function parseNum(str) {
+  if (!str) return NaN;
+  str = String(str).replace(/,/g, '.').replace(/\s/g, '').replace(/%/g, '');
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 2) {
+      const a = parseFloat(parts[0]);
+      const b = parseFloat(parts[1]);
+      if (!isNaN(a) && !isNaN(b) && b !== 0) return a / b;
+    }
+    return NaN;
+  }
+  const v = Number(str);
+  return isFinite(v) ? v : NaN;
+}
+
+/* ================== ИГРОВАЯ ЛОГИКА ================== */
+function initGame() {
+  startModal.classList.add('hidden');
+  resultModal.classList.add('hidden');
+  qIndex = 1;
+  sessionHistory = [];
+  loadQuestion();
+}
+
+function loadQuestion() {
+  currentQ = generateQuestion();
+  graphicContainer.innerHTML = currentQ.svg || '';
+  questionText.innerHTML = currentQ.text.replace(/\n/g, '<br>');
+  qCountEl.textContent = qIndex;
+  answerInput.value = '';
+  answerInput.disabled = false;
+  submitBtn.disabled = false;
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  clearCanvas();
+  qStartTime = Date.now();
+}
+
+function checkAnswer() {
+  const val = answerInput.value.trim();
+  if (val === '') return;
+  
+  const userAns = parseNum(val);
+  if (isNaN(userAns)) {
+    answerInput.style.borderColor = '#ef4444';
+    setTimeout(() => answerInput.style.borderColor = '#4f46e5', 800);
+    return;
+  }
+
+  answerInput.disabled = true;
+  submitBtn.disabled = true;
+
+  const isCorrect = Math.abs(userAns - currentQ.answer) < 0.01;
+  const timeSpent = Math.round((Date.now() - qStartTime) / 1000);
+  
+  sessionHistory.push({
+    text: currentQ.text,
+    answer: currentQ.answer,
+    userAnswer: val,
+    isCorrect: isCorrect,
+    timeSpent: timeSpent
+  });
+
+  if (isCorrect) showFeedback(`✅ Верно!`, 'ok');
+  else showFeedback(`❌ Ошибка. Ответ: ${currentQ.answer}`, 'bad');
+
+  setTimeout(() => {
+    qIndex++;
+    loadQuestion();
+  }, 1800);
+}
+
+function showFeedback(msg, type) {
+  feedbackEl.textContent = msg;
+  feedbackEl.className = `feedback show ${type}`;
+  setTimeout(() => { feedbackEl.classList.remove('show'); }, 1700);
+}
+
+function finishSession() {
+  if (sessionHistory.length === 0) {
+    alert("Вы еще не решили ни одного задания!");
+    return;
+  }
+  
+  const total = sessionHistory.length;
+  const correct = sessionHistory.filter(h => h.isCorrect).length;
+  const totalTime = sessionHistory.reduce((sum, h) => sum + h.timeSpent, 0);
+  const m = Math.floor(totalTime / 60);
+  const s = totalTime % 60;
+  const timeStr = m > 0 ? `${m} мин ${s} сек` : `${s} сек`;
+
+  resultSummary.innerHTML = `Решено заданий: <b>${total}</b><br>Правильно: <b>${correct}</b> из ${total}<br>Общее время: <b>${timeStr}</b>`;
+
+  resultsList.innerHTML = sessionHistory.map((h, i) => {
+    let timeDisp = h.timeSpent >= 60 ? `${Math.floor(h.timeSpent / 60)}м ${h.timeSpent % 60}с` : `${h.timeSpent} сек`;
+    return `
+      <div class="result-item ${h.isCorrect ? 'ok' : 'bad'}">
+        <div class="res-q">${i + 1}. ${h.text.replace(/\n/g, ' ')}</div>
+        <div class="res-info">
+          <span>Ответ: <b>${h.userAnswer}</b> ${!h.isCorrect ? `(Верно: ${h.answer})` : ''}</span>
+          <span class="res-time">⏱ ${timeDisp}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  resultModal.classList.remove('hidden');
+}
+
+/* ================== РИСОВАНИЕ ================== */
+function resizeCanvas() {
+  const rect = canvasWrapper.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+  tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  
+  ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, rect.width, rect.height);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = sizeSlider.value;
+  ctx.strokeStyle = '#000';
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function startDraw(e) {
+  if (e.type === 'mousedown' && e.button !== 0) return;
+  if (e.type === 'touchstart' && e.touches.length > 1) return;
+  
+  e.preventDefault();
+  saveState();
+  isDrawing = true;
+  const pos = getPos(e);
+  lastX = pos.x; lastY = pos.y;
+  
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#000';
+  ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+  ctx.fill();
+}
+
+function draw(e) {
+  if (!isDrawing) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+  
+  lastX = pos.x; lastY = pos.y;
+}
+
+function stopDraw() { isDrawing = false; }
+
+function saveState() {
+  if (undoStack.length > 20) undoStack.shift();
+  undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+}
+
+function undo() {
+  if (undoStack.length === 0) return;
+  const state = undoStack.pop();
+  ctx.putImageData(state, 0, 0);
+}
+
+function clearCanvas() {
+  saveState();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', draw);
+window.addEventListener('mouseup', stopDraw);
+canvas.addEventListener('mouseleave', stopDraw);
+canvas.addEventListener('touchstart', startDraw, { passive: false });
+canvas.addEventListener('touchmove', draw, { passive: false });
+window.addEventListener('touchend', stopDraw);
+window.addEventListener('touchcancel', stopDraw);
+
+/* ================== ИЗМЕНЕНИЕ РАЗМЕРА ДОСКИ ================== */
+let isResizing = false;
+let startYResize = 0;
+let startHeightResize = 0;
+
+resizer.addEventListener('mousedown', startResize);
+resizer.addEventListener('touchstart', startResize, { passive: false });
+
+function startResize(e) {
+  isResizing = true;
+  startYResize = e.touches ? e.touches[0].clientY : e.clientY;
+  startHeightResize = canvasWrapper.offsetHeight;
+  canvasWrapper.style.flex = 'none';
+  e.preventDefault();
+}
+
+window.addEventListener('mousemove', doResize);
+window.addEventListener('touchmove', doResize, { passive: false });
+
+function doResize(e) {
+  if (!isResizing) return;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const deltaY = clientY - startYResize;
+  let newHeight = startHeightResize - deltaY;
+  
+  if (newHeight < 150) newHeight = 150;
+  if (newHeight > window.innerHeight * 0.85) newHeight = window.innerHeight * 0.85;
+  
+  canvasWrapper.style.height = newHeight + 'px';
+  e.preventDefault();
+}
+
+window.addEventListener('mouseup', stopResize);
+window.addEventListener('touchend', stopResize);
+
+function stopResize() {
+  if (isResizing) {
+    isResizing = false;
+    resizeCanvas();
+  }
+}
+
+/* ================== ИНСТРУМЕНТЫ ================== */
+undoBtn.addEventListener('click', undo);
+clearBtn.addEventListener('click', clearCanvas);
+
+eraserBtn.addEventListener('click', () => {
+  isEraser = !isEraser;
+  eraserBtn.classList.toggle('active', isEraser);
+  ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+});
+
+sizeSlider.addEventListener('input', () => { ctx.lineWidth = sizeSlider.value; });
+
+/* ================== СОБЫТИЯ ================== */
+startBtn.addEventListener('click', initGame);
+restartBtn.addEventListener('click', initGame);
+submitBtn.addEventListener('click', checkAnswer);
+finishBtn.addEventListener('click', finishSession);
+
+answerInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
+});
+
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
+
+// Инициализация
+resizeCanvas();
+</script>
+</body>
+</html>
