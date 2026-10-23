@@ -239,14 +239,9 @@ function getTrapezoidSVG(a, b, h, isIsosceles, labels) {
     const xM2 = (x2 + x4) / 2;
     const yM = (yBot + yTop) / 2;
     
-    // Синяя линия
     svg += `<line x1="${xM1}" y1="${yM}" x2="${xM2}" y2="${yM}" stroke="#3b82f6" stroke-width="2.5" />`;
-    
-    // Засечки на середине боковых сторон (чтобы показать, что это середины)
     svg += `<circle cx="${xM1}" cy="${yM}" r="3" fill="#3b82f6" />`;
     svg += `<circle cx="${xM2}" cy="${yM}" r="3" fill="#3b82f6" />`;
-    
-    // Подпись средней линии
     svg += `<text x="${(xM1 + xM2) / 2}" y="${yM - 8}" font-size="14" fill="#3b82f6" text-anchor="middle" font-weight="bold">${labels.m}</text>`;
   }
   
@@ -278,28 +273,24 @@ function generateQuestion() {
       m = (a + b) / 2;
       text = `На рисунке изображена трапеция. Найдите её среднюю линию (m).`;
       answer = m;
-      // Показываем линию, но со знаком вопроса
       svg = getTrapezoidSVG(a, b, h, true, {a: a, b: b, m: 'm = ?'});
     } 
     else if (type === 2) {
       m = (a + b) / 2;
       text = `Средняя линия трапеции равна ${m}, а меньшее основание — ${b}. Найдите большее основание.`;
       answer = a;
-      // Показываем линию и её значение
       svg = getTrapezoidSVG(a, b, h, true, {b: b, m: `m = ${m}`});
     }
     else if (type === 3) {
       S = ((a + b) / 2) * h;
       text = `Найдите площадь трапеции, если её основания равны ${a} и ${b}, а высота — ${h}.`;
       answer = S;
-      // Рисуем высоту и среднюю линию
       svg = getTrapezoidSVG(a, b, h, true, {a: a, b: b, h: 'h', m: 'm'});
     }
     else if (type === 4) {
       S = ((a + b) / 2) * h;
       text = `Площадь трапеции равна ${S}, а средняя линия — ${(a+b)/2}. Найдите высоту трапеции.`;
       answer = h;
-      // Средняя линия с числом, высота - вопрос
       svg = getTrapezoidSVG(a, b, h, true, {a: a, b: b, h: 'h = ?', m: `m = ${(a+b)/2}`});
     }
     else if (type === 5) {
@@ -337,10 +328,20 @@ function generateQuestion() {
       svg = "";
     }
     else if (type === 9) {
-      const alpha = getRandomInt(30, 70);
-      text = `Постройте прямоугольную трапецию, у которой один из углов равен ${alpha}°. Найдите неизвестный острый угол.`;
-      answer = 180 - 90 - alpha; 
-      svg = "";
+      // ИСПРАВЛЕНО: Прямоугольная трапеция.
+      // Углы: 90, 90, alpha, beta. alpha + beta = 180.
+      // Если дан острый (30-80), второй будет тупым. Если дан тупой (100-150), второй будет острым.
+      const isAcuteGiven = Math.random() < 0.5;
+      if (isAcuteGiven) {
+          const alpha = getRandomInt(30, 80);
+          text = `Постройте прямоугольную трапецию, у которой один из углов равен ${alpha}°. Найдите неизвестный тупой угол.`;
+          answer = 180 - alpha;
+      } else {
+          const alpha = getRandomInt(100, 150);
+          text = `Постройте прямоугольную трапецию, у которой один из углов равен ${alpha}°. Найдите неизвестный острый угол.`;
+          answer = 180 - alpha;
+      }
+      svg = `<div style="color:#94a3b8; font-size: 14px; text-align:center;">Помните: в прямоугольной трапеции два угла по 90°.</div>`;
     }
     else {
       const k = getRandomInt(2, 4);
@@ -349,7 +350,6 @@ function generateQuestion() {
       const m = (a + b) / 2;
       text = `Основания трапеции относятся как 1:${k}. Средняя линия равна ${m}. Найдите большее основание.`;
       answer = b;
-      // Рисуем нормальную трапецию с подписанной средней линией
       svg = getTrapezoidSVG(b, a, 8, true, {m: `m = ${m}`});
     }
     
